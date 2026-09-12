@@ -1,0 +1,60 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Orders Management | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Orders Management</h1>
+  <p class="main-content__subtitle">All orders across the platform.</p>
+</div>
+
+<div class="card" style="margin-bottom: var(--space-6);">
+  <div class="card__body">
+    <form method="GET" action="{{ url_for('admin.orders') }}" style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center;">
+      <label for="status" class="form-label" style="margin:0;">Status</label>
+      <select class="form-input" id="status" name="status">
+        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+        {% for status in statuses %}
+        <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>{{ status }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-primary" type="submit">Apply</button>
+    </form>
+  </div>
+</div>
+
+{% if orders %}
+<div class="card">
+  <div class="card__body" style="padding:0;">
+    <table class="table" style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Order ID</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Customer</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Manufacturer</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Status</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Created</th>
+          <th style="text-align:right;padding:var(--space-3) var(--space-4);">View</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">#{{ order.order_id }}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ order.customer_name }}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ order.manufacturer_business_name or order.manufacturer_name or '—' }}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ order.status }}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ order.created_at | format_datetime }}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);text-align:right;">
+            <a href="{{ url_for('admin.order_detail', order_id=order.order_id) }}">Details</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card"><div class="card__body"><p>No orders match this filter.</p></div></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Reports & Stats | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Reports & Stats</h1>
+  <p class="main-content__subtitle">Platform overview at a glance.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-4);margin-bottom:var(--space-6);">
+  <div class="card">
+    <div class="card__body">
+      <div class="text-muted text-sm">Total Users</div>
+      <h2 style="margin:var(--space-2) 0 0;">{{ total_users | sum(attribute='count') }}</h2>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card__body">
+      <div class="text-muted text-sm">Total Orders</div>
+      <h2 style="margin:var(--space-2) 0 0;">{{ orders_by_status | sum(attribute='count') }}</h2>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card__body">
+      <div class="text-muted text-sm">Machines</div>
+      <h2 style="margin:var(--space-2) 0 0;">{{ machine_counts.total or 0 }}</h2>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card__body">
+      <div class="text-muted text-sm">Pending Approvals</div>
+      <h2 style="margin:var(--space-2) 0 0;">{{ pending_approvals }}</h2>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card__body">
+      <div class="text-muted text-sm">Orders in 7 days</div>
+      <h2 style="margin:var(--space-2) 0 0;">{{ recent_7_days }}</h2>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card__body">
+      <div class="text-muted text-sm">Orders in 30 days</div>
+      <h2 style="margin:var(--space-2) 0 0;">{{ recent_30_days }}</h2>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-6);">
+  <div class="card">
+    <div class="card__body" style="padding:0;">
+      <h2 style="padding:var(--space-4);margin:0;border-bottom:1px solid var(--color-border);">Users by Role</h2>
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Role</th>
+            <th style="text-align:right;padding:var(--space-3) var(--space-4);">Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in total_users %}
+          <tr>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ row.role }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);text-align:right;">{{ row.count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__body" style="padding:0;">
+      <h2 style="padding:var(--space-4);margin:0;border-bottom:1px solid var(--color-border);">Orders by Status</h2>
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Status</th>
+            <th style="text-align:right;padding:var(--space-3) var(--space-4);">Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in orders_by_status %}
+          <tr>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ row.status }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);text-align:right;">{{ row.count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__body" style="padding:0;">
+      <h2 style="padding:var(--space-4);margin:0;border-bottom:1px solid var(--color-border);">Machines</h2>
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">State</th>
+            <th style="text-align:right;padding:var(--space-3) var(--space-4);">Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">Active</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);text-align:right;">{{ machine_counts.active or 0 }}</td>
+          </tr>
+          <tr>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">Inactive</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);text-align:right;">{{ machine_counts.inactive or 0 }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Machines | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;">
+  <div>
+    <h1 class="main-content__title">Machines</h1>
+    <p class="main-content__subtitle">Manage the machines you manufacture with.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('manufacturer.machine_new') }}">+ Add Machine</a>
+</div>
+
+{% if machines %}
+  <div class="table-wrapper">
+    <table class="table" aria-label="My machines">
+      <thead>
+        <tr>
+          <th scope="col">Machine</th>
+          <th scope="col">Process</th>
+          <th scope="col">Max Dimensions</th>
+          <th scope="col">Capabilities</th>
+          <th scope="col">Status</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in machines %}
+          <tr>
+            <td>{{ m.machine_name }}</td>
+            <td>{{ m.process_name or '—' }}</td>
+            <td>{{ m.max_dimensions or '—' }}</td>
+            <td>
+              {% if m.capabilities %}
+                {% for c in m.capabilities %}
+                  <span class="badge badge-neutral" style="margin-right:4px;">{{ c.material_name or '—' }}</span>
+                {% endfor %}
+              {% else %}
+                <span class="text-muted text-sm">None</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if m.is_active %}
+                <span class="badge badge-success">Active</span>
+              {% else %}
+                <span class="badge badge-neutral">Inactive</span>
+              {% endif %}
+            </td>
+            <td style="white-space:nowrap;">
+              <a class="btn btn-ghost btn-sm" href="{{ url_for('manufacturer.machine_edit', machine_id=m.machine_id) }}">Edit</a>
+              <form method="POST" action="{{ url_for('manufacturer.machine_delete', machine_id=m.machine_id) }}" style="display:inline;">
+                <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-muted text-sm">You haven't added any machines yet.</p>
+{% endif %}
+{% endblock %}

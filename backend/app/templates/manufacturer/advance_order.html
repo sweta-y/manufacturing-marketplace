@@ -1,0 +1,36 @@
+{% extends "portal_layout.html" %}
+{% from "macros.html" import order_status_badge %}
+
+{% block title %}Update Order #{{ order_id }} | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Update Order #{{ order_id }}</h1>
+  <p class="main-content__subtitle">
+    Current status: {{ order_status_badge(current_status) }}
+    → advancing to {{ order_status_badge(next_status) }}.
+  </p>
+</div>
+
+<div class="card" style="max-width:600px;">
+  <form method="POST" action="{{ url_for('manufacturer.advance_order', order_id=order_id) }}">
+    <div class="card__body">
+      {% if next_status == 'Completed' %}
+        <div class="form-group">
+          <label class="form-label" for="final_cost">Final Cost (₹)</label>
+          <input class="form-input" type="number" id="final_cost" name="final_cost" placeholder="e.g. 4500" min="0" step="0.01" />
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label" for="remarks">Remarks (optional)</label>
+        <textarea class="form-textarea" id="remarks" name="remarks" placeholder="Add a note about this update"></textarea>
+      </div>
+    </div>
+    <div class="card__footer" style="display:flex;gap:var(--space-3);">
+      <button class="btn btn-primary" type="submit">Update to {{ next_status }}</button>
+      <a class="btn btn-ghost" href="{{ url_for('manufacturer.active_orders') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

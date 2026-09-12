@@ -1,0 +1,47 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Choose Manufacturer | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Choose a Manufacturer</h1>
+  <p class="main-content__subtitle">Step 3 — select who will make your order.</p>
+</div>
+
+<div class="card" style="margin-bottom:var(--space-6);">
+  <div class="card__body">
+    <div class="step-indicator" role="list" aria-label="Order progress">
+      <div class="step step--completed" role="listitem"><div class="step__pill">✓</div><span class="step__label">Upload</span></div>
+      <div class="step step--completed" role="listitem"><div class="step__pill">✓</div><span class="step__label">Configure</span></div>
+      <div class="step step--active" role="listitem"><div class="step__pill">3</div><span class="step__label">Matches</span></div>
+      <div class="step" role="listitem"><div class="step__pill">4</div><span class="step__label">Confirm</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header"><span class="card__title">Step 3 — Choose a Manufacturer</span></div>
+  <div class="card__body" style="display:flex;flex-direction:column;gap:var(--space-3);">
+    {% if not matches %}
+      <p class="text-muted text-sm">No manufacturers currently match this configuration. Try a different process or material.</p>
+      <a class="btn btn-secondary" href="{{ url_for('customer.upload_configure', request_id=request_id) }}">Back to Configure</a>
+    {% else %}
+      {% for m in matches %}
+        <div class="card">
+          <div class="card__body" style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);flex-wrap:wrap;">
+            <div>
+              <strong>{{ m.business_name }}</strong>
+              <p class="text-muted text-sm">{{ m.machine_name }} — max {{ m.max_dimensions or '—' }}</p>
+            </div>
+            <form method="POST" action="{{ url_for('customer.upload_matches', request_id=request_id) }}">
+              <input type="hidden" name="manufacturer_profile_id" value="{{ m.manufacturer_profile_id }}" />
+              <input type="hidden" name="machine_id" value="{{ m.machine_id }}" />
+              <button class="btn btn-primary btn-sm" type="submit">Select &amp; Place Order</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

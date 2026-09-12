@@ -1,0 +1,47 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Profile | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Profile</h1>
+  <p class="main-content__subtitle">Manage your account and business details.</p>
+</div>
+
+<div class="card" style="max-width:600px;">
+  <div class="card__header">
+    <span class="card__title">Account Details</span>
+    {% set status = profile.approval_status or 'pending' %}
+    <span class="badge {% if status == 'approved' %}badge-success{% elif status == 'rejected' %}badge-danger{% else %}badge-pending{% endif %}">
+      {{ status | capitalize }}
+    </span>
+  </div>
+  <form method="POST" action="{{ url_for('manufacturer.profile') }}">
+    <div class="card__body">
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input class="form-input" type="email" id="email" value="{{ profile.email or '' }}" disabled />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="full_name">Full Name</label>
+        <input class="form-input" type="text" id="full_name" name="full_name" value="{{ profile.full_name or '' }}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="phone">Phone</label>
+        <input class="form-input" type="tel" id="phone" name="phone" value="{{ profile.phone or '' }}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="business_name">Business Name</label>
+        <input class="form-input" type="text" id="business_name" name="business_name" value="{{ profile.business_name or '' }}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="address">Address</label>
+        <textarea class="form-textarea" id="address" name="address">{{ profile.address or '' }}</textarea>
+      </div>
+    </div>
+    <div class="card__footer">
+      <button class="btn btn-primary" type="submit">Save Changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

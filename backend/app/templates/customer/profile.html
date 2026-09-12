@@ -1,0 +1,42 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Profile | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Profile</h1>
+  <p class="main-content__subtitle">Manage your account details.</p>
+</div>
+
+<div class="card" style="max-width:600px;">
+  <div class="card__header"><span class="card__title">Account Details</span></div>
+  <form method="POST" action="{{ url_for('customer.profile') }}">
+    <div class="card__body">
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input class="form-input" type="email" id="email" value="{{ profile.email or '' }}" disabled />
+        <p class="form-hint">Email cannot be changed.</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="full_name">Full Name</label>
+        <input class="form-input" type="text" id="full_name" name="full_name" value="{{ profile.full_name or '' }}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="phone">Phone</label>
+        <input class="form-input" type="tel" id="phone" name="phone" value="{{ profile.phone or '' }}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="company_name">Company Name</label>
+        <input class="form-input" type="text" id="company_name" name="company_name" value="{{ profile.company_name or '' }}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="address">Address</label>
+        <textarea class="form-textarea" id="address" name="address">{{ profile.address or '' }}</textarea>
+      </div>
+    </div>
+    <div class="card__footer">
+      <button class="btn btn-primary" type="submit">Save Changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

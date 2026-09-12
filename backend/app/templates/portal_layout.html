@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% from "macros.html" import portal_shell %}
+
+{% block body %}
+{% call portal_shell(portal, page_title, active_nav) %}
+  {% block content %}{% endblock %}
+{% endcall %}
+{% endblock %}

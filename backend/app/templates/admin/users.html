@@ -1,0 +1,77 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Users Management | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Users</h1>
+  <p class="main-content__subtitle">Platform users and their current status.</p>
+</div>
+
+<div class="card" style="margin-bottom: var(--space-6);">
+  <div class="card__body">
+    <form method="GET" action="{{ url_for('admin.users') }}" style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center;">
+      <label for="role" class="form-label" style="margin:0;">Role</label>
+      <select class="form-input" id="role" name="role">
+        <option value="all" {% if role_filter == 'all' %}selected{% endif %}>All</option>
+        <option value="customer" {% if role_filter == 'customer' %}selected{% endif %}>Customer</option>
+        <option value="manufacturer" {% if role_filter == 'manufacturer' %}selected{% endif %}>Manufacturer</option>
+        <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+      </select>
+      <button class="btn btn-primary" type="submit">Apply</button>
+    </form>
+  </div>
+</div>
+
+{% if users %}
+<div class="card">
+  <div class="card__body" style="padding:0;">
+    <table class="table" style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Name</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Email</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Role</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Registered</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Status</th>
+          <th style="text-align:right;padding:var(--space-3) var(--space-4);">View</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ user.full_name }}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ user.email }}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">
+            <span class="badge {% if user.role == 'customer' %}badge-info{% elif user.role == 'manufacturer' %}badge-warning{% else %}badge-danger{% endif %}">{{ user.role }}</span>
+          </td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ user.created_at | format_datetime }}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">
+            {% if user.role == 'manufacturer' %}
+              {% if user.status == 'pending' %}<span class="badge badge-pending">pending</span>
+              {% elif user.status == 'rejected' %}<span class="badge badge-danger">rejected</span>
+              {% else %}<span class="badge badge-success">approved</span>
+              {% endif %}
+            {% else %}
+              {% if user.status == 'active' %}<span class="badge badge-success">active</span>
+              {% else %}<span class="badge badge-danger">inactive</span>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);text-align:right;">
+            <a href="{{ url_for('admin.user_detail', user_id=user.user_id) }}">Details</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="card__body">
+    <p>No users found for this filter.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

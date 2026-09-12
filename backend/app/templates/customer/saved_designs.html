@@ -1,0 +1,44 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Saved Designs | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Saved Designs</h1>
+  <p class="main-content__subtitle">Review uploaded design files and continue where you left off.</p>
+</div>
+
+{% if designs %}
+  <div class="table-wrapper">
+    <table class="table" aria-label="Saved designs">
+      <thead>
+        <tr>
+          <th scope="col">Filename</th>
+          <th scope="col">Uploaded</th>
+          <th scope="col">Status</th>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in designs %}
+          <tr>
+            <td>{{ d.filename }}</td>
+            <td>{{ d.uploaded_at | format_datetime }}</td>
+            <td>{{ d.status }}</td>
+            <td>
+              {% if d.action_url %}
+                <a class="btn btn-primary btn-sm" href="{{ d.action_url }}">{{ d.action_label }}</a>
+              {% else %}
+                <span class="text-muted text-sm">No action</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-muted text-sm">You don't have any saved design files yet.</p>
+  <a class="btn btn-primary" href="{{ url_for('customer.upload_design') }}" style="margin-top:var(--space-4);">Upload a Design</a>
+{% endif %}
+{% endblock %}

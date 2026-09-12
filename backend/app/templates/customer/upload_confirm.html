@@ -1,0 +1,29 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Order Placed | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Order Placed</h1>
+  <p class="main-content__subtitle">Step 4 — confirmation.</p>
+</div>
+
+<div class="card" style="margin-bottom:var(--space-6);">
+  <div class="card__body">
+    <div class="step-indicator" role="list" aria-label="Order progress">
+      <div class="step step--completed" role="listitem"><div class="step__pill">✓</div><span class="step__label">Upload</span></div>
+      <div class="step step--completed" role="listitem"><div class="step__pill">✓</div><span class="step__label">Configure</span></div>
+      <div class="step step--completed" role="listitem"><div class="step__pill">✓</div><span class="step__label">Matches</span></div>
+      <div class="step step--active" role="listitem"><div class="step__pill">✓</div><span class="step__label">Confirm</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header"><span class="card__title">Order Placed Successfully</span></div>
+  <div class="card__body">
+    <p>Order #{{ order.order_id }} placed successfully with <strong>{{ order.business_name }}</strong>.</p>
+    <a class="btn btn-primary" href="{{ url_for('customer.orders') }}" style="margin-top:var(--space-4);">View My Orders</a>
+  </div>
+</div>
+{% endblock %}

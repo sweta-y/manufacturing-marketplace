@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "macros.html" import flash_messages %}
+
+{% block title %}Register | 3D Marketplace{% endblock %}
+
+{% block body %}
+<div class="auth-page">
+  <div class="auth-page__visual" aria-hidden="true">
+    <div class="auth-page__panel">
+      <div class="auth-page__brand">
+        <div class="landing-brand__mark">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <span>3D Marketplace</span>
+      </div>
+      <div class="auth-page__spec">
+        <span class="eyebrow">Customer onboarding</span>
+        <h2>Source manufacturing for your next production run.</h2>
+      </div>
+      <div class="auth-page__grid" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-page__form-wrap">
+    <div class="auth-card">
+      <div class="auth-card__header">
+        <div>
+          <div class="eyebrow eyebrow--dark">Get started</div>
+          <h1>Create customer account</h1>
+        </div>
+        <a class="text-link" href="{{ url_for('index') }}">Back to home</a>
+      </div>
+
+      {{ flash_messages() }}
+
+      <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form">
+        <div class="form-group">
+          <label class="form-label" for="full_name">Full Name</label>
+          <input class="form-input" type="text" id="full_name" name="full_name" required value="{{ form.full_name or '' }}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input class="form-input" type="email" id="email" name="email" required value="{{ form.email or '' }}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone (optional)</label>
+          <input class="form-input" type="tel" id="phone" name="phone" value="{{ form.phone or '' }}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input class="form-input" type="password" id="password" name="password" required />
+        </div>
+        <button class="btn btn-primary" type="submit">Register</button>
+      </form>
+
+      <div class="auth-card__links">
+        <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login</a></p>
+        <p>Looking to manufacture? <a href="{{ url_for('auth.register_manufacturer') }}">Register as manufacturer</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

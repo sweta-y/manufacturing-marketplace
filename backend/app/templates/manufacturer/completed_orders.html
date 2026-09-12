@@ -1,0 +1,41 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Completed Orders | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Completed Orders</h1>
+  <p class="main-content__subtitle">A record of every order you've finished manufacturing.</p>
+</div>
+
+{% if orders %}
+  <div class="table-wrapper">
+    <table class="table" aria-label="Completed orders">
+      <thead>
+        <tr>
+          <th scope="col">Order ID</th>
+          <th scope="col">Process</th>
+          <th scope="col">Material</th>
+          <th scope="col">Qty</th>
+          <th scope="col">Final Cost</th>
+          <th scope="col">Completed On</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+          <tr>
+            <td>#{{ o.order_id }}</td>
+            <td>{{ o.process_name or '—' }}</td>
+            <td>{{ o.material_name or '—' }}</td>
+            <td>{{ o.quantity or '—' }}</td>
+            <td>{{ o.final_cost | format_cost }}</td>
+            <td>{{ o.updated_at | format_datetime }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-muted text-sm">You haven't completed any orders yet.</p>
+{% endif %}
+{% endblock %}

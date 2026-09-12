@@ -1,0 +1,52 @@
+{% extends "portal_layout.html" %}
+{% from "macros.html" import order_status_badge %}
+
+{% block title %}Active Orders | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Active Orders</h1>
+  <p class="main-content__subtitle">Orders you've accepted, in progress toward completion.</p>
+</div>
+
+{% if orders %}
+  <div class="table-wrapper">
+    <table class="table" aria-label="Active orders">
+      <thead>
+        <tr>
+          <th scope="col">Order ID</th>
+          <th scope="col">Process</th>
+          <th scope="col">Material</th>
+          <th scope="col">Qty</th>
+          <th scope="col">Status</th>
+          <th scope="col">Last Updated</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+          <tr>
+            <td>#{{ o.order_id }}</td>
+            <td>{{ o.process_name or '—' }}</td>
+            <td>{{ o.material_name or '—' }}</td>
+            <td>{{ o.quantity or '—' }}</td>
+            <td>{{ order_status_badge(o.status) }}</td>
+            <td>{{ o.updated_at | format_datetime }}</td>
+            <td>
+              {% if o.next_status %}
+                <a class="btn btn-primary btn-sm" href="{{ url_for('manufacturer.advance_order', order_id=o.order_id) }}">
+                  Advance to {{ o.next_status }}
+                </a>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-muted text-sm">No active orders right now.</p>
+{% endif %}
+{% endblock %}

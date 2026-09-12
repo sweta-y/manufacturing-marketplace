@@ -1,0 +1,35 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Upload Design | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Upload Your Design</h1>
+  <p class="main-content__subtitle">Step 1 — upload a 3D file to begin.</p>
+</div>
+
+<div class="card" style="margin-bottom:var(--space-6);">
+  <div class="card__body">
+    <div class="step-indicator" role="list" aria-label="Order progress">
+      <div class="step step--active" role="listitem"><div class="step__pill">1</div><span class="step__label">Upload</span></div>
+      <div class="step" role="listitem"><div class="step__pill">2</div><span class="step__label">Configure</span></div>
+      <div class="step" role="listitem"><div class="step__pill">3</div><span class="step__label">Matches</span></div>
+      <div class="step" role="listitem"><div class="step__pill">4</div><span class="step__label">Confirm</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header"><span class="card__title">Step 1 — Upload Your File</span></div>
+  <div class="card__body">
+    <form method="POST" action="{{ url_for('customer.upload_design') }}" enctype="multipart/form-data">
+      <div class="form-group">
+        <label class="form-label" for="file">3D Design File</label>
+        <input class="form-input" type="file" id="file" name="file" accept=".stl,.step,.stp,.obj" required />
+        <p class="form-hint">Supports .STL, .STEP, .STP, .OBJ — max 50 MB</p>
+      </div>
+      <button class="btn btn-primary" type="submit">Upload and Continue</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

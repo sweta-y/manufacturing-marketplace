@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% macro flash_messages() %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="badge {% if category == 'error' %}badge-danger{% elif category == 'success' %}badge-success{% else %}badge-info{% endif %}" style="margin-bottom:var(--space-4);padding:var(--space-3) var(--space-4);display:block;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+{% endmacro %}
+
+{% macro role_badge_class(role) -%}
+  {%- if role == 'customer' -%}badge-info
+  {%- elif role == 'manufacturer' -%}badge-warning
+  {%- elif role == 'admin' -%}badge-danger
+  {%- else -%}badge-neutral
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro order_status_badge(status) -%}
+  {%- set badge_map = {
+    'Request Submitted': 'badge-pending',
+    'Manufacturer Selected': 'badge-pending',
+    'Accepted': 'badge-info',
+    'Manufacturing': 'badge-warning',
+    'Quality Check': 'badge-pending',
+    'Completed': 'badge-success',
+    'Cancelled': 'badge-danger'
+  } -%}
+  <span class="badge {{ badge_map.get(status, 'badge-neutral') }}">{{ status }}</span>
+{%- endmacro %}
+
+{% macro sidebar_link(href, label, active=false) -%}
+  <a href="{{ href }}" class="sidebar__link{% if active %} active{% endif %}"{% if active %} aria-current="page"{% endif %}>{{ label }}</a>
+{%- endmacro %}
+
+{% macro portal_shell(portal, page_title, active_nav) %}
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="{{ portal | capitalize }} navigation">
+    <div class="sidebar__brand">
+      <div class="sidebar__brand-icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <div>
+        <div class="sidebar__brand-name">3D Marketplace</div>
+        <div class="sidebar__brand-sub">
+          {%- if portal == 'customer' -%}Customer Portal
+          {%- elif portal == 'manufacturer' -%}Manufacturer
+          {%- else -%}Admin
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar__nav" aria-label="{{ portal | capitalize }} menu">
+      <div class="sidebar__section">
+        <span class="sidebar__section-label">Main</span>
+        {% if portal == 'customer' %}
+          {{ sidebar_link(url_for('customer.dashboard'), 'Dashboard', active_nav == 'dashboard') }}
+          {{ sidebar_link(url_for('customer.upload_design'), 'Upload Design', active_nav == 'upload') }}
+          {{ sidebar_link(url_for('customer.saved_designs'), 'Saved Designs', active_nav == 'saved_designs') }}
+          {{ sidebar_link(url_for('customer.orders'), 'My Orders', active_nav == 'orders') }}
+        {% elif portal == 'manufacturer' %}
+          {{ sidebar_link(url_for('manufacturer.dashboard'), 'Dashboard', active_nav == 'dashboard') }}
+          {{ sidebar_link(url_for('manufacturer.machines'), 'Machines', active_nav == 'machines') }}
+          {{ sidebar_link(url_for('manufacturer.available_requests'), 'Available Requests', active_nav == 'available_requests') }}
+          {{ sidebar_link(url_for('manufacturer.active_orders'), 'Active Orders', active_nav == 'active_orders') }}
+          {{ sidebar_link(url_for('manufacturer.completed_orders'), 'Completed Orders', active_nav == 'completed_orders') }}
+        {% else %}
+          {{ sidebar_link(url_for('admin.dashboard'), 'Dashboard', active_nav == 'dashboard') }}
+          {{ sidebar_link(url_for('admin.users'), 'Users', active_nav == 'users') }}
+          {{ sidebar_link(url_for('admin.machines'), 'Machines', active_nav == 'machines') }}
+          {{ sidebar_link(url_for('admin.orders'), 'Orders', active_nav == 'orders') }}
+          {{ sidebar_link(url_for('admin.reports'), 'Reports', active_nav == 'reports') }}
+          {{ sidebar_link(url_for('admin.manufacturer_approvals'), 'Manufacturer Approvals', active_nav == 'manufacturer_approvals') }}
+        {% endif %}
+      </div>
+      <div class="sidebar__section">
+        <span class="sidebar__section-label">Account</span>
+        {% if portal == 'customer' %}
+          {{ sidebar_link(url_for('customer.profile'), 'Profile', active_nav == 'profile') }}
+        {% elif portal == 'manufacturer' %}
+          {{ sidebar_link(url_for('manufacturer.profile'), 'Profile', active_nav == 'profile') }}
+        {% endif %}
+      </div>
+    </nav>
+
+    <div class="sidebar__user">
+      <div class="sidebar__user-avatar" aria-hidden="true">
+        {%- if current_user and current_user.full_name -%}
+          {{ current_user.full_name.strip()[0] | upper }}
+        {%- else -%}
+          ?
+        {%- endif -%}
+      </div>
+      <div class="sidebar__user-info">
+        <div class="sidebar__user-name">{{ current_user.full_name if current_user else 'User' }}</div>
+        <div class="sidebar__user-role">{{ portal | capitalize }}</div>
+      </div>
+    </div>
+  </aside>
+
+  <header class="topbar" role="banner">
+    <div class="topbar__left">
+      <span class="topbar__page-title">{{ page_title }}</span>
+    </div>
+    <div class="topbar__right">
+      {% if current_user %}
+        <span class="badge {{ role_badge_class(current_user.role) }}">{{ current_user.role }}</span>
+      {% endif %}
+      <form method="POST" action="{{ url_for('auth.logout') }}" style="display:inline;">
+        <button class="btn btn-secondary btn-sm" type="submit">Logout</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="main-content" role="main">
+    {{ flash_messages() }}
+    {{ caller() }}
+  </main>
+</div>
+{% endmacro %}

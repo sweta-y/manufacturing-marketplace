@@ -1,0 +1,47 @@
+{% extends "portal_layout.html" %}
+{% from "macros.html" import order_status_badge %}
+
+{% block title %}My Orders | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">My Orders</h1>
+  <p class="main-content__subtitle">Track the status of every order you've placed.</p>
+</div>
+
+{% if orders %}
+  <div class="table-wrapper">
+    <table class="table" aria-label="My orders">
+      <thead>
+        <tr>
+          <th scope="col">Order ID</th>
+          <th scope="col">Process</th>
+          <th scope="col">Material</th>
+          <th scope="col">Qty</th>
+          <th scope="col">Manufacturer</th>
+          <th scope="col">Status</th>
+          <th scope="col">Date</th>
+          <th scope="col">Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+          <tr>
+            <td>#{{ o.order_id }}</td>
+            <td>{{ o.process_name or '—' }}</td>
+            <td>{{ o.material_name or '—' }}</td>
+            <td>{{ o.quantity or '—' }}</td>
+            <td>{{ o.business_name or '—' }}</td>
+            <td>{{ order_status_badge(o.status) }}</td>
+            <td>{{ o.created_at | format_date }}</td>
+            <td><a href="{{ url_for('customer.order_detail', order_id=o.order_id) }}">View</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-muted text-sm">You haven't placed any orders yet.</p>
+  <a class="btn btn-primary" href="{{ url_for('customer.upload_design') }}" style="margin-top:var(--space-4);">Upload a Design</a>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Reject Request | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Reject Request #{{ order_id }}</h1>
+  <p class="main-content__subtitle">Optionally provide a reason for rejecting this request.</p>
+</div>
+
+<div class="card" style="max-width:600px;">
+  <form method="POST" action="{{ url_for('manufacturer.reject_order', order_id=order_id) }}">
+    <div class="card__body">
+      <div class="form-group">
+        <label class="form-label" for="reason">Reason (optional)</label>
+        <textarea class="form-textarea" id="reason" name="reason" placeholder="e.g. Machine unavailable this week"></textarea>
+      </div>
+    </div>
+    <div class="card__footer" style="display:flex;gap:var(--space-3);">
+      <button class="btn btn-danger" type="submit">Reject Request</button>
+      <a class="btn btn-ghost" href="{{ url_for('manufacturer.available_requests') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

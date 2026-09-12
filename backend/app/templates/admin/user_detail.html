@@ -1,0 +1,132 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}User Detail | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">{{ user.full_name }}</h1>
+  <p class="main-content__subtitle">{{ user.email }}</p>
+</div>
+
+<div class="card" style="margin-bottom: var(--space-6);">
+  <div class="card__body" style="display:flex;flex-direction:column;gap:var(--space-2);">
+    <p><strong>Role:</strong> <span class="badge {% if user.role == 'customer' %}badge-info{% elif user.role == 'manufacturer' %}badge-warning{% else %}badge-danger{% endif %}">{{ user.role }}</span></p>
+    <p><strong>Registration Date:</strong> {{ user.created_at | format_datetime }}</p>
+    <p><strong>Phone:</strong> {{ user.phone or '—' }}</p>
+    <p><strong>Status:</strong>
+      {% if user.role == 'manufacturer' %}
+        {% if user.approval_status == 'pending' %}<span class="badge badge-pending">pending</span>
+        {% elif user.approval_status == 'rejected' %}<span class="badge badge-danger">rejected</span>
+        {% else %}<span class="badge badge-success">approved</span>
+        {% endif %}
+      {% else %}
+        {% if user.is_active %}<span class="badge badge-success">active</span>{% else %}<span class="badge badge-danger">inactive</span>{% endif %}
+      {% endif %}
+    </p>
+    {% if user.role == 'manufacturer' and user.rejection_reason %}
+      <p><strong>Rejection Reason:</strong> {{ user.rejection_reason }}</p>
+    {% endif %}
+    {% if user.role == 'manufacturer' %}
+      <p><strong>Business Name:</strong> {{ user.business_name or '—' }}</p>
+      <p><strong>Address:</strong> {{ user.manufacturer_address or '—' }}</p>
+    {% else %}
+      <p><strong>Company Name:</strong> {{ user.company_name or '—' }}</p>
+      <p><strong>Address:</strong> {{ user.customer_address or '—' }}</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if user.role == 'manufacturer' %}
+  <h2 style="margin-bottom:var(--space-3);font-size:var(--font-size-md);">Machines</h2>
+  {% if manufacturer_machines %}
+  <div class="card" style="margin-bottom:var(--space-6);">
+    <div class="card__body" style="padding:0;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Machine</th>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Process</th>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Active</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for machine in manufacturer_machines %}
+          <tr>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ machine.machine_name }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ machine.process_name or '—' }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ 'Yes' if machine.is_active else 'No' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+    <div class="card" style="margin-bottom:var(--space-6);"><div class="card__body"><p>No machines listed.</p></div></div>
+  {% endif %}
+
+  <h2 style="margin-bottom:var(--space-3);font-size:var(--font-size-md);">Orders</h2>
+  {% if manufacturer_orders %}
+  <div class="card">
+    <div class="card__body" style="padding:0;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Order</th>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Customer</th>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Status</th>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in manufacturer_orders %}
+          <tr>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">#{{ order.order_id }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ order.customer_name }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ order.status }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ order.created_at | format_datetime }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+    <div class="card"><div class="card__body"><p>No orders assigned.</p></div></div>
+  {% endif %}
+{% endif %}
+
+{% if user.role == 'customer' %}
+  <h2 style="margin-bottom:var(--space-3);font-size:var(--font-size-md);">Orders</h2>
+  {% if customer_orders %}
+  <div class="card">
+    <div class="card__body" style="padding:0;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Order</th>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Manufacturer</th>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Status</th>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in customer_orders %}
+          <tr>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">#{{ order.order_id }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ order.manufacturer_name }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ order.status }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ order.created_at | format_datetime }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+    <div class="card"><div class="card__body"><p>No orders placed.</p></div></div>
+  {% endif %}
+{% endif %}
+
+<a class="btn btn-secondary" href="{{ url_for('admin.users') }}" style="margin-top:var(--space-6);">Back to Users</a>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Dashboard | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Customer Dashboard</h1>
+  <p class="main-content__subtitle">Welcome back, {{ current_user.full_name }}.</p>
+</div>
+
+<div class="grid-3">
+  <div class="card">
+    <div class="card__body" style="text-align:center;padding:var(--space-8) var(--space-6);">
+      <div style="font-size:var(--font-size-h3);font-weight:var(--font-weight-bold);">{{ order_count }}</div>
+      <div class="text-muted text-sm">Total Orders</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card__body" style="text-align:center;padding:var(--space-8) var(--space-6);">
+      <div style="font-size:var(--font-size-h3);font-weight:var(--font-weight-bold);">{{ draft_design_count }}</div>
+      <div class="text-muted text-sm">Draft Designs</div>
+      <a href="{{ url_for('customer.saved_designs') }}" class="text-link" style="margin-top:var(--space-3);display:inline-block;">View saved designs</a>
+    </div>
+  </div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-6);">
+  <a class="btn btn-primary" href="{{ url_for('customer.upload_design') }}">Upload Design</a>
+  <a class="btn btn-secondary" href="{{ url_for('customer.saved_designs') }}">Saved Designs</a>
+  <a class="btn btn-secondary" href="{{ url_for('customer.orders') }}">View My Orders</a>
+</div>
+{% endblock %}

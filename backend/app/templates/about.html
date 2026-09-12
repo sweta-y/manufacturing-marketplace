@@ -1,0 +1,183 @@
+﻿{% extends "base.html" %}
+
+{% block title %}About Us | 3D Marketplace{% endblock %}
+
+{% block body %}
+<div class="landing-page">
+  <header class="landing-header">
+    <div class="landing-shell">
+      <div class="landing-brand" aria-label="3D Marketplace home">
+        <div class="landing-brand__mark">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <span>3D Marketplace</span>
+      </div>
+      <nav class="landing-nav" aria-label="Main navigation">
+        <a href="{{ url_for('index') }}#how-it-works">How it works</a>
+        <a href="{{ url_for('index') }}#processes">Processes</a>
+        <a href="{{ url_for('about') }}">About</a>
+      </nav>
+      <div class="landing-header__actions">
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('auth.login') }}">Log In</a>
+        <a class="btn btn-primary btn-sm" href="{{ url_for('auth.register') }}">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="landing-hero">
+      <div class="landing-shell landing-hero__layout">
+        <div class="landing-hero__content">
+          <div class="eyebrow">Who we are</div>
+          <h1>Building the bridge between design and production.</h1>
+          <p>
+            3D Marketplace connects engineers and product teams with a vetted network of CNC, 3D printing, and laser cutting manufacturers, so every design finds the right partner without the back-and-forth.
+          </p>
+          <div class="landing-proof">
+            <div>
+              <strong>46+</strong>
+              <span>Qualified shops</span>
+            </div>
+            <div>
+              <strong>24h</strong>
+              <span>Avg. match time</span>
+            </div>
+            <div>
+              <strong>99.2%</strong>
+              <span>On-time delivery</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="visual-panel panel-primary">
+            <div class="panel-label">Our network</div>
+            <div class="panel-line"></div>
+            <div class="panel-grid">
+              <div class="panel-box"></div>
+              <div class="panel-box panel-box--accent"></div>
+              <div class="panel-box"></div>
+              <div class="panel-box panel-box--accent"></div>
+            </div>
+            <div class="panel-metrics">
+              <div>
+                <span>Manufacturers</span>
+                <strong>46+</strong>
+              </div>
+              <div>
+                <span>States covered</span>
+                <strong>12</strong>
+              </div>
+            </div>
+          </div>
+          <div class="floating-card small-card">
+            <span>Founded</span>
+            <strong>2024</strong>
+          </div>
+          <div class="floating-card mid-card">
+            <span>Focus</span>
+            <strong>Precision parts</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-section">
+      <div class="landing-shell">
+        <div class="section-heading">
+          <div class="eyebrow">Our mission</div>
+          <h2>Making precision manufacturing accessible to everyone</h2>
+        </div>
+        <div class="steps-grid">
+          <article class="step-card">
+            <div class="step-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <span class="step-card__index">01</span>
+            <h3>Our Vision</h3>
+            <p>A world where any team, from solo makers to large enterprises, can turn a design file into a finished part without friction.</p>
+          </article>
+
+          <article class="step-card">
+            <div class="step-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16v2H4v-2zm2-4h2V7H6v7zm5 0h2V4h-2v10zm5 0h2v-6h-2v6z"/></svg>
+            </div>
+            <span class="step-card__index">02</span>
+            <h3>Our Standards</h3>
+            <p>Every manufacturer in our network is vetted for equipment, quality control, and on-time delivery before joining the platform.</p>
+          </article>
+
+          <article class="step-card">
+            <div class="step-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.41l-7.29 7.3-1.42-1.42 7.3-7.29H14V3zm-2 3H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7h-2v7H5V8h7V6z"/></svg>
+            </div>
+            <span class="step-card__index">03</span>
+            <h3>Our Growth</h3>
+            <p>We are expanding our manufacturer network every month, adding new processes, materials, and regional coverage.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-section landing-section--dark">
+      <div class="landing-shell">
+        <div class="section-heading section-heading--center">
+          <div class="eyebrow">Why choose us</div>
+          <h2>A platform built on trust and precision</h2>
+        </div>
+        <div class="process-grid">
+          <article class="process-card">
+            <div class="process-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+            </div>
+            <h3>Vetted Manufacturers</h3>
+            <p>Every shop is reviewed for capability, quality history, and capacity before it can accept orders.</p>
+          </article>
+
+          <article class="process-card">
+            <div class="process-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 9.7-8 12-4.5-2.3-8-7-8-12V6l8-4zm0 5.5L7 8.6v4.1c0 3.4 2.2 6.5 5 8.2 2.8-1.7 5-4.8 5-8.2V8.6l-5-1.1zm1.5 2.3h2v5h-2v-5zm-1 7.6h2v2h-2v-2z"/></svg>
+            </div>
+            <h3>Secure Orders</h3>
+            <p>Full order tracking and transparent status updates from request to delivery, every step of the way.</p>
+          </article>
+
+          <article class="process-card">
+            <div class="process-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <h3>Dedicated Support</h3>
+            <p>Our team is on hand to help resolve questions on materials, tolerances, and production timelines.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="about" class="landing-footer">
+    <div class="landing-shell landing-footer__inner">
+      <div>
+        <div class="landing-brand landing-brand--footer">
+          <div class="landing-brand__mark">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+          </div>
+          <span>3D Marketplace</span>
+        </div>
+      </div>
+      <div class="landing-footer__links">
+        <a href="{{ url_for('auth.login') }}">Login</a>
+        <a href="{{ url_for('auth.register') }}">Register</a>
+        <a href="{{ url_for('about') }}">About</a>
+      </div>
+    </div>
+  </footer>
+</div>
+{% endblock %}

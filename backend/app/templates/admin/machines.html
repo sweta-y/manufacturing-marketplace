@@ -1,0 +1,65 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Machines Overview | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Machines Overview</h1>
+  <p class="main-content__subtitle">All machines across all manufacturers.</p>
+</div>
+
+<div class="card" style="margin-bottom: var(--space-6);">
+  <div class="card__body">
+    <form method="GET" action="{{ url_for('admin.machines') }}" style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center;">
+      <label for="process_id" class="form-label" style="margin:0;">Process</label>
+      <select class="form-input" id="process_id" name="process_id">
+        <option value="all" {% if process_filter == 'all' %}selected{% endif %}>All</option>
+        {% for process in processes %}
+        <option value="{{ process.process_id }}" {% if process_filter|string == process.process_id|string %}selected{% endif %}>{{ process.name }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="manufacturer_id" class="form-label" style="margin:0;">Manufacturer</label>
+      <select class="form-input" id="manufacturer_id" name="manufacturer_id">
+        <option value="all" {% if manufacturer_filter == 'all' %}selected{% endif %}>All</option>
+        {% for manufacturer in manufacturers %}
+        <option value="{{ manufacturer.manufacturer_profile_id }}" {% if manufacturer_filter|string == manufacturer.manufacturer_profile_id|string %}selected{% endif %}>{{ manufacturer.business_name }}</option>
+        {% endfor %}
+      </select>
+
+      <button class="btn btn-primary" type="submit">Apply</button>
+    </form>
+  </div>
+</div>
+
+{% if machines %}
+<div class="card">
+  <div class="card__body" style="padding:0;">
+    <table class="table" style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Machine</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Manufacturer</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Process</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Active</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for machine in machines %}
+        <tr>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ machine.machine_name }}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ machine.manufacturer_name or '—' }}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ machine.process_name or '—' }}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">
+            {% if machine.is_active %}<span class="badge badge-success">active</span>{% else %}<span class="badge badge-danger">inactive</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card"><div class="card__body"><p>No machines match these filters.</p></div></div>
+{% endif %}
+{% endblock %}

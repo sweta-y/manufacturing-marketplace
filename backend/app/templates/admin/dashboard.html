@@ -1,0 +1,19 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Admin Dashboard | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Admin Dashboard</h1>
+  <p class="main-content__subtitle">Administrative portal.</p>
+</div>
+
+<div class="card">
+  <div class="card__body">
+    <p>Signed in as <strong>{{ current_user.full_name }}</strong> ({{ current_user.email }}).</p>
+    <div style="margin-top: var(--space-4);">
+      <a class="btn btn-primary" href="{{ url_for('admin.manufacturer_approvals') }}">Manufacturer Approvals</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

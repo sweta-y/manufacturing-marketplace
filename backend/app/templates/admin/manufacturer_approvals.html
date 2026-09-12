@@ -1,0 +1,56 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Manufacturer Approvals | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Manufacturer Approvals</h1>
+  <p class="main-content__subtitle">Review pending manufacturer registrations.</p>
+</div>
+
+{% if approvals %}
+  <div class="card">
+    <div class="card__body" style="padding:0;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Business</th>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Contact</th>
+            <th style="text-align:left;padding:var(--space-3) var(--space-4);">Registered</th>
+            <th style="text-align:right;padding:var(--space-3) var(--space-4);">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in approvals %}
+          <tr>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ item.business_name }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">
+              {{ item.full_name }}<br>
+              <span class="text-muted text-sm">{{ item.email }}</span>
+            </td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{{ item.created_at | format_datetime }}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);text-align:right;">
+              <div style="display:flex;justify-content:flex-end;gap:var(--space-2);flex-wrap:wrap;">
+                <form method="POST" action="{{ url_for('admin.approve_manufacturer', manufacturer_profile_id=item.manufacturer_profile_id) }}">
+                  <button class="btn btn-primary btn-sm" type="submit">Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.reject_manufacturer', manufacturer_profile_id=item.manufacturer_profile_id) }}">
+                  <input class="form-input" type="text" name="reason" placeholder="Reason (optional)" style="min-width:180px;" />
+                  <button class="btn btn-secondary btn-sm" type="submit" style="margin-left:var(--space-2);">Reject</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="card">
+    <div class="card__body">
+      <p>No manufacturer registrations are currently pending approval.</p>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

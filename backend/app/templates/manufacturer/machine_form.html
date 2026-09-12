@@ -1,0 +1,120 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}{{ page_title }} | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">{{ page_title }}</h1>
+  <p class="main-content__subtitle">
+    {% if machine %}Update machine details and capabilities.{% else %}Add a new machine and its capabilities.{% endif %}
+  </p>
+</div>
+
+<div class="card" style="max-width:700px;margin-bottom:var(--space-6);">
+  <div class="card__header"><span class="card__title">Machine Details</span></div>
+  <form method="POST" action="{% if machine %}{{ url_for('manufacturer.machine_edit', machine_id=machine.machine_id) }}{% else %}{{ url_for('manufacturer.machine_new') }}{% endif %}">
+    <div class="card__body" style="display:flex;flex-direction:column;gap:var(--space-4);">
+      <div class="form-group">
+        <label class="form-label" for="machine_name">Machine Name</label>
+        <input class="form-input" type="text" id="machine_name" name="machine_name" required value="{{ form.machine_name }}" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="process_id">Process</label>
+        <select class="form-select" id="process_id" name="process_id">
+          <option value="">Select a process</option>
+          {% for p in processes %}
+            <option value="{{ p.process_id }}" {% if form.process_id|string == p.process_id|string %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if machine %}
+        <div class="form-group">
+          <button class="btn btn-ghost btn-sm" type="submit" name="action" value="refresh_materials">Update material list for selected process</button>
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label" for="max_dimensions">Max Dimensions</label>
+        <input class="form-input" type="text" id="max_dimensions" name="max_dimensions" value="{{ form.max_dimensions }}" placeholder="e.g. 400 x 400 x 300 mm" />
+      </div>
+
+      {% if machine %}
+        <div class="form-group">
+          <label class="form-label" for="is_active">Status</label>
+          <select class="form-select" id="is_active" name="is_active">
+            <option value="true" {% if form.is_active == 'true' %}selected{% endif %}>Active</option>
+            <option value="false" {% if form.is_active == 'false' %}selected{% endif %}>Inactive</option>
+          </select>
+        </div>
+      {% endif %}
+
+      {% if not machine %}
+        <fieldset class="form-group">
+          <legend class="form-label">Initial Capabilities (optional)</legend>
+          {% for i in range(3) %}
+            <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-2);flex-wrap:wrap;">
+              <select class="form-select" name="cap_material_id" style="flex:2;min-width:180px;">
+                <option value="">Material {{ i + 1 }}</option>
+                {% for m in materials %}
+                  <option value="{{ m.material_id }}">{{ m.name }}</option>
+                {% endfor %}
+              </select>
+              <input class="form-input" type="number" name="cap_max_quantity" min="1" value="1000" placeholder="Max qty" style="flex:1;min-width:120px;" />
+            </div>
+          {% endfor %}
+        </fieldset>
+      {% endif %}
+    </div>
+    <div class="card__footer" style="display:flex;gap:var(--space-3);">
+      <button class="btn btn-primary" type="submit">Save Machine</button>
+      <a class="btn btn-ghost" href="{{ url_for('manufacturer.machines') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% if machine %}
+  <div class="card" style="max-width:700px;margin-bottom:var(--space-6);">
+    <div class="card__header"><span class="card__title">Existing Capabilities</span></div>
+    <div class="card__body" style="display:flex;flex-direction:column;gap:var(--space-2);">
+      {% if existing_capabilities %}
+        {% for c in existing_capabilities %}
+          <div class="card card--flat">
+            <div class="card__body" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-2) var(--space-3);">
+              <span>{{ c.material_name or 'Material' }} <span class="text-muted text-sm">(max qty: {{ c.max_quantity }})</span></span>
+              <form method="POST" action="{{ url_for('manufacturer.delete_capability', capability_id=c.capability_id) }}">
+                <button class="btn btn-ghost btn-sm" type="submit">Remove</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted text-sm">No capabilities added yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card" style="max-width:700px;">
+    <div class="card__header"><span class="card__title">Add Capability</span></div>
+    <form method="POST" action="{{ url_for('manufacturer.add_capability', machine_id=machine.machine_id) }}">
+      <div class="card__body" style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="flex:2;min-width:180px;margin-bottom:0;">
+          <label class="form-label" for="material_id">Material</label>
+          <select class="form-select" id="material_id" name="material_id" required>
+            <option value="">Select a material</option>
+            {% for m in materials %}
+              <option value="{{ m.material_id }}">{{ m.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
+          <label class="form-label" for="max_quantity">Max Qty</label>
+          <input class="form-input" type="number" id="max_quantity" name="max_quantity" min="1" value="1000" />
+        </div>
+        <button class="btn btn-secondary btn-sm" type="submit">+ Add</button>
+      </div>
+    </form>
+  </div>
+{% endif %}
+{% endblock %}

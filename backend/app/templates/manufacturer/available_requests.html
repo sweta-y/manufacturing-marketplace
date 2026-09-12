@@ -1,0 +1,52 @@
+{% extends "portal_layout.html" %}
+
+{% block title %}Available Requests | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Available Requests</h1>
+  <p class="main-content__subtitle">New manufacturing requests waiting for your response.</p>
+</div>
+
+{% if requests %}
+  <div class="table-wrapper">
+    <table class="table" aria-label="Available requests">
+      <thead>
+        <tr>
+          <th scope="col">Order ID</th>
+          <th scope="col">Process</th>
+          <th scope="col">Material</th>
+          <th scope="col">Qty</th>
+          <th scope="col">Surface Finish</th>
+          <th scope="col">Notes</th>
+          <th scope="col">File</th>
+          <th scope="col">Date</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in requests %}
+          <tr>
+            <td>#{{ r.order_id }}</td>
+            <td>{{ r.process_name or '—' }}</td>
+            <td>{{ r.material_name or '—' }}</td>
+            <td>{{ r.quantity or '—' }}</td>
+            <td>{{ r.surface_finish or '—' }}</td>
+            <td>{{ r.notes or '—' }}</td>
+            <td>{{ r.filename or 'None' }}</td>
+            <td>{{ r.created_at | format_date }}</td>
+            <td style="white-space:nowrap;">
+              <form method="POST" action="{{ url_for('manufacturer.accept_order', order_id=r.order_id) }}" style="display:inline;">
+                <button class="btn btn-primary btn-sm" type="submit">Accept</button>
+              </form>
+              <a class="btn btn-danger btn-sm" href="{{ url_for('manufacturer.reject_order', order_id=r.order_id) }}">Reject</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-muted text-sm">No new requests right now. Check back later.</p>
+{% endif %}
+{% endblock %}

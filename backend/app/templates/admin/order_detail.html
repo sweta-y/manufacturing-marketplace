@@ -1,0 +1,47 @@
+{% extends "portal_layout.html" %}
+{% from "macros.html" import order_status_badge %}
+
+{% block title %}Order #{{ order.order_id }} | 3D Marketplace{% endblock %}
+
+{% block content %}
+<div class="main-content__header">
+  <h1 class="main-content__title">Order #{{ order.order_id }}</h1>
+  <p class="main-content__subtitle">Full platform order detail.</p>
+</div>
+
+<div class="card" style="margin-bottom: var(--space-6);">
+  <div class="card__body" style="display:flex;flex-direction:column;gap:var(--space-2);">
+    <p><strong>Status:</strong> {{ order_status_badge(order.status) }}</p>
+    <p><strong>Customer:</strong> {{ order.customer_name }} ({{ order.customer_email }})</p>
+    <p><strong>Manufacturer:</strong> {{ order.business_name or order.manufacturer_contact_name or '—' }}</p>
+    <p><strong>Process:</strong> {{ order.process_name or '—' }}</p>
+    <p><strong>Material:</strong> {{ order.material_name or '—' }}</p>
+    <p><strong>Quantity:</strong> {{ order.quantity or '—' }}</p>
+    <p><strong>Surface Finish:</strong> {{ order.surface_finish or '—' }}</p>
+    <p><strong>Notes:</strong> {{ order.notes or '—' }}</p>
+    <p><strong>Final Cost:</strong> {% if order.final_cost is not none %}{{ order.final_cost | format_cost }}{% else %}Not yet quoted{% endif %}</p>
+    <p><strong>Created:</strong> {{ order.created_at | format_datetime }}</p>
+    <p><strong>Last Updated:</strong> {{ order.updated_at | format_datetime }}</p>
+  </div>
+</div>
+
+<h2 style="margin-bottom:var(--space-3);font-size:var(--font-size-md);">Status History</h2>
+{% if history %}
+  <div style="display:flex;flex-direction:column;gap:var(--space-2);">
+    {% for h in history %}
+      <div class="card">
+        <div class="card__body" style="padding:var(--space-3) var(--space-4);">
+          <strong>{{ h.status }}</strong>
+          {% if h.changed_by_name %} by {{ h.changed_by_name }}{% endif %}
+          — <span class="text-muted text-sm">{{ h.changed_at | format_datetime }}</span>
+          {% if h.remarks %}<p class="text-muted text-sm">{{ h.remarks }}</p>{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="text-muted text-sm">No history yet.</p>
+{% endif %}
+
+<a class="btn btn-secondary" href="{{ url_for('admin.orders') }}" style="margin-top:var(--space-6);">Back to Orders</a>
+{% endblock %}
