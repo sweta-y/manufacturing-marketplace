@@ -1,0 +1,175 @@
+﻿/* ============================================================
+   tokens.css â€” 3D Marketplace Design Tokens
+   ============================================================ */
+
+:root {
+
+  /* ----------------------------------------------------------
+     COLOR PALETTE
+     ---------------------------------------------------------- */
+
+  /* Brand / Primary */
+  --color-primary:         #001e40;   /* Deep navy â€” primary action, sidebar bg */
+  --color-primary-dark:    #001328;   /* Darker navy for hover states */
+  --color-primary-mid:     #002f63;   /* Mid navy for secondary sidebar elements */
+  --color-primary-subtle:  #e6edf5;   /* Very light navy tint â€” active row bg   */
+
+  /* Industrial dark theme */
+  --color-ink:             #0b1117;   /* Near-black app background */
+  --color-ink-soft:        #121c23;   /* Alternate dark panel */
+  --color-panel:           #101a20;   /* Elevated dark panels */
+  --color-panel-strong:    #18252d;   /* Elevated panel strong */
+  --color-panel-alt:       #0d151b;   /* Alternate dark surface */
+  --color-accent:          #f59e0b;   /* Industrial amber accent */
+  --color-accent-strong:   #ffb703;   /* brighter signal accent */
+  --color-accent-soft:     rgba(245, 158, 11, 0.12);
+  --color-accent-2:         #38bdf8;   /* Cool blue secondary accent */
+  --color-accent-2-soft:    rgba(56, 189, 248, 0.12);
+  --grad-1: #7c3aed;
+  --grad-2: #38bdf8;
+  --grad-3: #ec4899;
+  --glass-bg: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.14);
+  --grad-em1: #059669;
+  --grad-em2: #10b981;
+  --grad-am: #f59e0b;
+  --deep-bg: #070b12;
+  --color-line:            rgba(148, 163, 184, 0.2);
+  --color-grid:            rgba(148, 163, 184, 0.12);
+
+  /* Neutral surfaces */
+  --color-bg:              #f9f9f9;   /* Page background */
+  --color-surface:         #ffffff;   /* Card, panel surfaces */
+  --color-surface-muted:   #eeeeee;   /* Muted card surface / input bg */
+  --color-border:          #c3c6d1;   /* Default border color */
+  --color-border-light:    #dde0e8;   /* Subtle dividers */
+
+  /* Text */
+  --color-text-primary:    #0d1117;   /* Main body copy */
+  --color-text-secondary:  #4a5568;   /* Supporting / meta text */
+  --color-text-tertiary:   #8a93a6;   /* Placeholder, disabled */
+  --color-text-inverse:    #ffffff;   /* Text on navy backgrounds */
+  --color-text-inverse-muted: rgba(255,255,255,0.65); /* Muted on navy */
+  --color-text-muted-soft: rgba(255,255,255,0.7);
+
+  /* Semantic / Status */
+  --color-success:         #16a34a;
+  --color-success-bg:      #dcfce7;
+  --color-warning:         #ca8a04;
+  --color-warning-bg:      #fef9c3;
+  --color-danger:          #dc2626;
+  --color-danger-bg:       #fee2e2;
+  --color-info:            #0369a1;
+  --color-info-bg:         #e0f2fe;
+  --color-pending:         #7c3aed;
+  --color-pending-bg:      #ede9fe;
+
+  /* ----------------------------------------------------------
+     TYPOGRAPHY
+     ---------------------------------------------------------- */
+
+  --font-family-base:      'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-mono:      'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Scale â€” heading down to micro label */
+  --font-size-h1:   3rem;       /* 48px */
+  --font-size-h2:   2rem;       /* 32px */
+  --font-size-h3:   1.5rem;     /* 24px */
+  --font-size-h4:   1.25rem;    /* 20px */
+  --font-size-h5:   1.125rem;   /* 18px */
+  --font-size-xl:   1.125rem;   /* 18px */
+  --font-size-lg:   1rem;       /* 16px â€” base */
+  --font-size-md:   0.9375rem;  /* 15px */
+  --font-size-sm:   0.875rem;   /* 14px */
+  --font-size-xs:   0.75rem;    /* 12px */
+  --font-size-label:0.6875rem;  /* 11px â€” uppercase section labels */
+
+  /* Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium:  500;
+  --font-weight-semibold:600;
+  --font-weight-bold:    700;
+
+  /* Line heights */
+  --line-height-tight:  1.25;
+  --line-height-snug:   1.4;
+  --line-height-normal: 1.6;
+  --line-height-relaxed:1.75;
+
+  /* Letter spacing */
+  --letter-spacing-tight:  -0.02em;
+  --letter-spacing-normal:  0em;
+  --letter-spacing-wide:    0.04em;
+  --letter-spacing-widest:  0.1em;    /* For uppercase micro labels */
+
+  /* ----------------------------------------------------------
+     BORDER RADIUS SCALE
+     ---------------------------------------------------------- */
+
+  --radius-xs:  0.125rem;  /*  2px */
+  --radius-sm:  0.25rem;   /*  4px */
+  --radius-md:  0.375rem;  /*  6px */
+  --radius-lg:  0.5rem;    /*  8px */
+  --radius-xl:  0.75rem;   /* 12px */
+  --radius-2xl: 1rem;      /* 16px */
+  --radius-3xl: 1.5rem;    /* 24px */
+  --radius-full:9999px;    /* pill shapes */
+
+  /* ----------------------------------------------------------
+     SPACING SCALE
+     ---------------------------------------------------------- */
+
+  --space-1:  0.25rem;   /*  4px */
+  --space-2:  0.5rem;    /*  8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-5:  1.25rem;   /* 20px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+
+  /* ----------------------------------------------------------
+     LAYOUT
+     ---------------------------------------------------------- */
+
+  --sidebar-width:      270px;
+  --topbar-height:      56px;
+  --content-max-width:  1280px;
+
+  /* ----------------------------------------------------------
+     SHADOWS
+     ---------------------------------------------------------- */
+
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md:  0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg:  0 10px 15px rgba(0, 0, 0, 0.08), 0 4px 6px rgba(0, 0, 0, 0.04);
+  --shadow-xl:  0 20px 25px rgba(0, 0, 0, 0.08), 0 10px 10px rgba(0, 0, 0, 0.03);
+
+  /* ----------------------------------------------------------
+     TRANSITIONS
+     ---------------------------------------------------------- */
+
+  --duration-fast:   100ms;
+  --duration-base:   150ms;
+  --duration-slow:   250ms;
+  --duration-drawer: 280ms;
+  --ease-out:        cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:     cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ----------------------------------------------------------
+     Z-INDEX STACK
+     ---------------------------------------------------------- */
+
+  --z-base:    1;
+  --z-raised:  10;
+  --z-sidebar: 100;
+  --z-topbar:  200;
+  --z-overlay: 300;
+  --z-modal:   400;
+  --z-toast:   500;
+}
+
+

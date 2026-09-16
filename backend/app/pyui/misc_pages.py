@@ -1,0 +1,762 @@
+"""
+misc_pages.py — Pure Python pyui functions for landing, about, 404, 500 pages.
+No Jinja2. These pages use base_layout() not portal_page() (no sidebar).
+"""
+from flask import url_for
+from app.pyui.layout import base_layout
+
+
+def landing_page(**kwargs):
+    login_url = url_for("auth.login")
+    register_url = url_for("auth.register")
+    register_mfr_url = url_for("auth.register_manufacturer")
+    about_url = url_for("about")
+
+    body = f"""<div class="lp3">
+  <header class="lp3-header" id="siteHeader">
+    <div class="lp3-shell lp3-header__row">
+      <div class="lp3-brand">
+        <div class="lp3-brand__mark">
+          <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <span>3D Marketplace</span>
+      </div>
+      <nav class="lp3-nav" id="siteNav">
+        <a href="#how" data-nav="how">How it works</a>
+        <a href="#processes" data-nav="processes">Processes</a>
+        <a href="#why" data-nav="why">Why us</a>
+        <a href="#stats" data-nav="stats">Network</a>
+        <a href="{about_url}">About</a>
+      </nav>
+      <div class="lp3-header__actions">
+        <a class="lp3-btn lp3-btn--ghost" href="{login_url}">Log In</a>
+        <a class="lp3-btn lp3-btn--solid" href="{register_url}">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="lp3-hero" id="hero">
+    <div class="lp3-hero-bg">
+      <img id="parallaxImg" src="https://images.unsplash.com/photo-1666618090858-fbcee636bd3e?auto=format&fit=crop&w=1800&q=80" alt="CNC machining" />
+      <div class="lp3-hero-overlay"></div>
+      <div class="lp3-glow g1"></div>
+      <div class="lp3-glow g2"></div>
+      <div class="lp3-grid-lines"></div>
+    </div>
+    <div class="lp3-shell lp3-hero__inner">
+      <div class="lp3-pill reveal">
+        <span class="lp3-dot"></span> <span id="liveCount">46</span> manufacturers online right now
+      </div>
+      <h1 class="lp3-title reveal">
+        From Design to <span class="lp3-title__accent">Production.</span>
+      </h1>
+      <p class="lp3-sub reveal">
+        Connect with vetted CNC, 3D printing, and laser cutting partners to turn your designs into production-ready parts &mdash; with full order visibility, start to finish.
+      </p>
+      <div class="lp3-cta-row reveal">
+        <a class="lp3-btn lp3-btn--solid lp3-btn--lg" href="{register_url}">Get Started &#8594;</a>
+        <a class="lp3-btn lp3-btn--outline lp3-btn--lg" href="{register_mfr_url}">I'm a Manufacturer</a>
+      </div>
+    </div>
+    <div class="lp3-scroll-cue"><span></span></div>
+  </section>
+
+  <div class="lp3-marquee">
+    <div class="lp3-marquee__track">
+      <span>PRECISION ENGINEERING</span><span>&#9670;</span>
+      <span>CNC MACHINING</span><span>&#9670;</span>
+      <span>3D PRINTING</span><span>&#9670;</span>
+      <span>LASER CUTTING</span><span>&#9670;</span>
+      <span>VETTED PARTNERS</span><span>&#9670;</span>
+      <span>FAST TURNAROUND</span><span>&#9670;</span>
+      <span>PRECISION ENGINEERING</span><span>&#9670;</span>
+      <span>CNC MACHINING</span><span>&#9670;</span>
+      <span>3D PRINTING</span><span>&#9670;</span>
+      <span>LASER CUTTING</span><span>&#9670;</span>
+      <span>VETTED PARTNERS</span><span>&#9670;</span>
+      <span>FAST TURNAROUND</span><span>&#9670;</span>
+    </div>
+  </div>
+
+  <section id="stats" class="lp3-stats-band">
+    <div class="lp3-shell lp3-stats-grid">
+      <div class="lp3-stat reveal"><strong data-count="46">0</strong><span>+ Qualified shops</span></div>
+      <div class="lp3-stat reveal"><strong data-count="24">0</strong><span>h Avg. match time</span></div>
+      <div class="lp3-stat reveal"><strong data-count="99">0</strong><span>.2% On-time delivery</span></div>
+      <div class="lp3-stat reveal"><strong data-count="12">0</strong><span>States covered</span></div>
+      <div class="lp3-stat reveal"><strong data-count="128">0</strong><span>Orders this month</span></div>
+    </div>
+  </section>
+
+  <section id="how" class="lp3-section">
+    <div class="lp3-shell">
+      <div class="lp3-heading reveal">
+        <div class="lp3-eyebrow">How it works</div>
+        <h2>Simple process. Reliable production.</h2>
+        <p class="lp3-heading__sub">Four steps from CAD file to finished part, with full visibility at every stage.</p>
+      </div>
+      <div class="lp3-grid4">
+        <div class="lp3-card reveal">
+          <div class="lp3-card__icon"><svg viewBox="0 0 24 24"><path d="M14 3h7v7h-2V6.41l-7.29 7.3-1.42-1.42 7.3-7.29H14V3zm-2 3H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7h-2v7H5V8h7V6z"/></svg></div>
+          <span class="lp3-card__num">01</span>
+          <h3>Upload Design</h3>
+          <p>Submit STL, STEP, STP, or OBJ files and define your manufacturing requirements.</p>
+        </div>
+        <div class="lp3-card reveal">
+          <div class="lp3-card__icon"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 9.7-8 12-4.5-2.3-8-7-8-12V6l8-4zm0 5.5L7 8.6v4.1c0 3.4 2.2 6.5 5 8.2 2.8-1.7 5-4.8 5-8.2V8.6l-5-1.1z"/></svg></div>
+          <span class="lp3-card__num">02</span>
+          <h3>Get Matched</h3>
+          <p>We identify manufacturers with the right process, material, and production capacity.</p>
+        </div>
+        <div class="lp3-card reveal">
+          <div class="lp3-card__icon"><svg viewBox="0 0 24 24"><path d="M4 18h16v2H4v-2zm2-4h2V7H6v7zm5 0h2V4h-2v10zm5 0h2v-6h-2v6z"/></svg></div>
+          <span class="lp3-card__num">03</span>
+          <h3>Track Order</h3>
+          <p>Monitor status live from request through manufacturing, QC, and completion.</p>
+        </div>
+        <div class="lp3-card reveal">
+          <div class="lp3-card__icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+          <span class="lp3-card__num">04</span>
+          <h3>Receive Part</h3>
+          <p>Approved output arrives ready for inspection, assembly, or final workflow integration.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="processes" class="lp3-section lp3-section--dark">
+    <div class="lp3-shell">
+      <div class="lp3-heading lp3-heading--center reveal">
+        <div class="lp3-eyebrow">Manufacturing processes</div>
+        <h2>Built for high-precision production</h2>
+        <p class="lp3-heading__sub">Three core processes, dozens of vetted partners, one platform.</p>
+      </div>
+      <div class="lp3-grid3">
+        <div class="lp3-photo-card reveal">
+          <img src="https://images.unsplash.com/photo-1666618090858-fbcee636bd3e?auto=format&fit=crop&w=900&q=80" alt="CNC Machining" />
+          <div class="lp3-photo-card__overlay"></div>
+          <div class="lp3-photo-card__body">
+            <h3>CNC Machining</h3>
+            <p>Precision milling, turning, and tight-tolerance fabrication for demanding industrial parts.</p>
+          </div>
+        </div>
+        <div class="lp3-photo-card reveal">
+          <img src="https://images.unsplash.com/photo-1611505982706-9ebc79e5d3f1?auto=format&fit=crop&w=900&q=80" alt="3D Printing" />
+          <div class="lp3-photo-card__overlay"></div>
+          <div class="lp3-photo-card__body">
+            <h3>3D Printing</h3>
+            <p>Rapid prototyping and low-volume runs using additive manufacturing for complex geometries.</p>
+          </div>
+        </div>
+        <div class="lp3-photo-card reveal">
+          <img src="https://images.unsplash.com/photo-1738162837451-2041c1418f54?auto=format&fit=crop&w=900&q=80" alt="Laser Cutting" />
+          <div class="lp3-photo-card__overlay"></div>
+          <div class="lp3-photo-card__body">
+            <h3>Laser Cutting</h3>
+            <p>Accurate sheet metal and profile cutting for fast-turn fabrication and production batches.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="why" class="lp3-section lp3-why">
+    <div class="lp3-shell lp3-why__layout">
+      <div class="lp3-why__image reveal">
+        <img src="https://images.unsplash.com/photo-1638959492386-f9a68d55c374?auto=format&fit=crop&w=1000&q=80" alt="Engineering workshop" />
+        <div class="lp3-why__badge">
+          <span>Founded</span>
+          <strong>2024</strong>
+        </div>
+      </div>
+      <div class="lp3-why__content reveal">
+        <div class="lp3-eyebrow">Why choose us</div>
+        <h2>A platform built on trust and precision</h2>
+        <div class="lp3-feature">
+          <div class="lp3-feature__icon"><svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg></div>
+          <div><h4>Vetted Manufacturers</h4><p>Every shop is reviewed for capability, quality history, and capacity before joining.</p></div>
+        </div>
+        <div class="lp3-feature">
+          <div class="lp3-feature__icon"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 9.7-8 12-4.5-2.3-8-7-8-12V6l8-4z"/></svg></div>
+          <div><h4>Secure Orders</h4><p>Full order tracking and transparent status updates from request to delivery.</p></div>
+        </div>
+        <div class="lp3-feature">
+          <div class="lp3-feature__icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+          <div><h4>Dedicated Support</h4><p>Our team helps resolve questions on materials, tolerances, and timelines.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp3-section lp3-testimonials">
+    <div class="lp3-shell">
+      <div class="lp3-heading lp3-heading--center reveal">
+        <div class="lp3-eyebrow">Trusted by teams</div>
+        <h2>What our customers say</h2>
+      </div>
+      <div class="lp3-grid3">
+        <div class="lp3-quote reveal">
+          <p>&ldquo;We cut our sourcing time in half. The matching process is fast and the manufacturers are genuinely high quality.&rdquo;</p>
+          <div class="lp3-quote__author">
+            <div class="lp3-avatar">RK</div>
+            <div><strong>Rahul K.</strong><span>Product Engineer</span></div>
+          </div>
+        </div>
+        <div class="lp3-quote reveal">
+          <p>&ldquo;Order tracking end to end is a huge relief. No more chasing manufacturers for status updates.&rdquo;</p>
+          <div class="lp3-quote__author">
+            <div class="lp3-avatar">SM</div>
+            <div><strong>Sneha M.</strong><span>Operations Lead</span></div>
+          </div>
+        </div>
+        <div class="lp3-quote reveal">
+          <p>&ldquo;Great platform for getting CNC and laser cutting quotes fast without endless back and forth emails.&rdquo;</p>
+          <div class="lp3-quote__author">
+            <div class="lp3-avatar">AV</div>
+            <div><strong>Arjun V.</strong><span>Founder, Hardware Startup</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp3-final">
+    <div class="lp3-final-bg">
+      <img src="https://images.unsplash.com/photo-1611505982706-9ebc79e5d3f1?auto=format&fit=crop&w=1800&q=80" alt="Manufacturing" />
+      <div class="lp3-final-overlay"></div>
+      <div class="lp3-glow g3"></div>
+    </div>
+    <div class="lp3-shell lp3-final__inner reveal">
+      <h2>Ready to bring your design to life?</h2>
+      <p>Join hundreds of engineers already manufacturing with vetted partners.</p>
+      <a class="lp3-btn lp3-btn--solid lp3-btn--lg" href="{register_url}">Get Started Free &#8594;</a>
+    </div>
+  </section>
+
+  <footer class="lp3-footer">
+    <div class="lp3-shell lp3-footer__top">
+      <div class="lp3-footer__brand">
+        <div class="lp3-brand">
+          <div class="lp3-brand__mark">
+            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          </div>
+          <span>3D Marketplace</span>
+        </div>
+        <p>Precision manufacturing network connecting designers with vetted production partners.</p>
+      </div>
+      <div class="lp3-footer__col">
+        <h5>Platform</h5>
+        <a href="{login_url}">Login</a>
+        <a href="{register_url}">Register</a>
+        <a href="{about_url}">About</a>
+      </div>
+      <div class="lp3-footer__col">
+        <h5>Processes</h5>
+        <a href="#processes">CNC Machining</a>
+        <a href="#processes">3D Printing</a>
+        <a href="#processes">Laser Cutting</a>
+      </div>
+    </div>
+    <div class="lp3-shell lp3-footer__bottom">
+      <span>&copy; 2026 3D Marketplace. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <a href="{register_url}" class="lp3-fab" id="stickyFab">
+    Get Started <span class="btn-arrow">&#8594;</span>
+  </a>
+</div>
+
+<style>
+  * {{ box-sizing: border-box; }}
+  .lp3 {{ background: var(--color-ink); color: var(--color-text-inverse); font-family: var(--font-family-base); overflow-x: hidden; }}
+  .lp3-shell {{ max-width: 1240px; margin: 0 auto; padding: 0 24px; }}
+
+  .lp3-header {{ position: sticky; top: 0; z-index: 60; background: rgba(11,17,23,0.75); backdrop-filter: blur(14px); border-bottom: 1px solid var(--color-line); transition: box-shadow .3s, background .3s; }}
+  .lp3-header.scrolled {{ background: rgba(11,17,23,0.94); box-shadow: 0 8px 24px rgba(0,0,0,0.35); }}
+  .lp3-header__row {{ display: flex; align-items: center; justify-content: space-between; height: 78px; }}
+  .lp3-brand {{ display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.15rem; }}
+  .lp3-brand__mark {{ width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); display: flex; align-items: center; justify-content: center; }}
+  .lp3-brand__mark svg {{ width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 1.8; }}
+  .lp3-nav {{ display: flex; gap: 30px; }}
+  .lp3-nav a {{ color: rgba(255,255,255,0.75); text-decoration: none; font-size: 0.94rem; position: relative; padding-bottom: 4px; transition: color .2s; }}
+  .lp3-nav a:hover {{ color: var(--color-accent-strong); }}
+  .lp3-nav a.active {{ color: var(--color-accent-strong); }}
+  .lp3-nav a.active::after {{ content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; background: var(--color-accent-strong); border-radius: 2px; }}
+  .lp3-header__actions {{ display: flex; gap: 12px; }}
+
+  .lp3-btn {{ display: inline-flex; align-items: center; gap: 6px; padding: 11px 22px; border-radius: var(--radius-md); font-weight: 600; font-size: 0.9rem; text-decoration: none; transition: transform .2s, box-shadow .2s; border: 1px solid transparent; }}
+  .lp3-btn--ghost {{ color: #fff; }}
+  .lp3-btn--ghost:hover {{ color: var(--color-accent-strong); }}
+  .lp3-btn--solid {{ background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong)); color: var(--color-ink); box-shadow: 0 6px 20px rgba(245,158,11,0.35); }}
+  .lp3-btn--solid:hover {{ transform: translateY(-2px); box-shadow: 0 10px 28px rgba(245,158,11,0.5); }}
+  .lp3-btn--outline {{ border-color: rgba(255,255,255,0.25); color: #fff; }}
+  .lp3-btn--outline:hover {{ border-color: var(--color-accent-strong); color: var(--color-accent-strong); }}
+  .lp3-btn--lg {{ padding: 16px 30px; font-size: 1rem; }}
+
+  .lp3-hero {{ position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; }}
+  .lp3-hero-bg {{ position: absolute; inset: -5% -5%; z-index: 0; }}
+  .lp3-hero-bg img {{ width: 100%; height: 110%; object-fit: cover; opacity: 0.32; will-change: transform; }}
+  .lp3-hero-overlay {{ position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,17,23,0.55) 0%, rgba(11,17,23,0.88) 60%, var(--color-ink) 100%); }}
+  .lp3-grid-lines {{ position: absolute; inset: -10%; background-image: linear-gradient(rgba(245,158,11,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.06) 1px, transparent 1px); background-size: 46px 46px; animation: gridDrift 20s linear infinite; }}
+  @keyframes gridDrift {{ 0% {{ transform: translate(0,0); }} 100% {{ transform: translate(46px,46px); }} }}
+  .lp3-glow {{ position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.4; animation: glowFloat 15s ease-in-out infinite; }}
+  .g1 {{ width: 460px; height: 460px; background: var(--color-accent); top: -10%; right: -8%; }}
+  .g2 {{ width: 380px; height: 380px; background: var(--color-primary-mid); bottom: -10%; left: -8%; animation-duration: 19s; animation-delay: -4s; }}
+  .g3 {{ width: 400px; height: 400px; background: var(--color-accent); top: 20%; left: 30%; }}
+  @keyframes glowFloat {{ 0%,100% {{ transform: translate(0,0); }} 50% {{ transform: translate(-30px, 30px); }} }}
+
+  .lp3-hero__inner {{ position: relative; z-index: 2; text-align: center; padding: 110px 24px 60px; }}
+  .lp3-pill {{ display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: var(--radius-full); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); font-size: 0.85rem; margin-bottom: 26px; }}
+  .lp3-dot {{ width: 8px; height: 8px; border-radius: 50%; background: var(--color-success); box-shadow: 0 0 8px var(--color-success); animation: dotPulse 2s infinite; }}
+  @keyframes dotPulse {{ 0%,100% {{ opacity: 1; }} 50% {{ opacity: 0.4; }} }}
+  .lp3-title {{ font-size: clamp(2.4rem, 6vw, 4.6rem); font-weight: 800; line-height: 1.08; letter-spacing: -0.03em; margin: 0 0 22px; }}
+  .lp3-title__accent {{ color: var(--color-accent-strong); }}
+  .lp3-sub {{ font-size: 1.1rem; color: rgba(255,255,255,0.72); max-width: 640px; margin: 0 auto 36px; line-height: 1.65; }}
+  .lp3-cta-row {{ display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }}
+
+  .lp3-scroll-cue {{ position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); width: 26px; height: 42px; border: 2px solid rgba(255,255,255,0.3); border-radius: var(--radius-full); z-index: 2; }}
+  .lp3-scroll-cue span {{ display: block; width: 4px; height: 8px; margin: 6px auto 0; background: var(--color-accent-strong); border-radius: var(--radius-full); animation: cueDrop 1.6s infinite; }}
+  @keyframes cueDrop {{ 0% {{ transform: translateY(0); opacity: 1; }} 70% {{ transform: translateY(16px); opacity: 0; }} 100% {{ opacity: 0; }} }}
+
+  .lp3-marquee {{ background: var(--color-primary-dark); border-top: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); overflow: hidden; padding: 16px 0; }}
+  .lp3-marquee__track {{ display: flex; gap: 20px; white-space: nowrap; width: max-content; animation: marqueeScroll 28s linear infinite; }}
+  .lp3-marquee__track span {{ font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.45); }}
+  .lp3-marquee__track span:nth-child(even) {{ color: var(--color-accent-strong); font-size: 0.7rem; }}
+  @keyframes marqueeScroll {{ 0% {{ transform: translateX(0); }} 100% {{ transform: translateX(-50%); }} }}
+
+  .lp3-stats-band {{ padding: 42px 0; background: var(--color-primary); border-bottom: 1px solid var(--color-line); }}
+  .lp3-stats-grid {{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; text-align: center; }}
+  .lp3-stat strong {{ display: block; font-size: 2rem; font-weight: 800; color: var(--color-accent-strong); }}
+  .lp3-stat span {{ font-size: 0.8rem; color: rgba(255,255,255,0.6); }}
+
+  .lp3-section {{ padding: 100px 0; }}
+  .lp3-section--dark {{ background: var(--color-ink-soft); }}
+  .lp3-heading {{ margin-bottom: 48px; max-width: 640px; }}
+  .lp3-heading--center {{ text-align: center; max-width: 700px; margin-left: auto; margin-right: auto; }}
+  .lp3-eyebrow {{ color: var(--color-accent-strong); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 10px; }}
+  .lp3-heading h2 {{ font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; letter-spacing: -0.02em; margin: 0 0 12px; }}
+  .lp3-heading__sub {{ color: rgba(255,255,255,0.6); font-size: 1rem; margin: 0; }}
+
+  .lp3-grid4 {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }}
+  .lp3-grid3 {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }}
+
+  .lp3-card {{ background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-xl); padding: 28px 22px; transition: transform .25s, border-color .25s; }}
+  .lp3-card:hover {{ transform: translateY(-6px); border-color: var(--color-accent); }}
+  .lp3-card__icon {{ width: 44px; height: 44px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--color-primary), var(--color-primary-mid)); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }}
+  .lp3-card__icon svg {{ width: 22px; height: 22px; fill: var(--color-accent-strong); }}
+  .lp3-card__num {{ display: block; font-size: 1.6rem; font-weight: 800; color: rgba(255,255,255,0.12); margin-bottom: 4px; }}
+  .lp3-card h3 {{ margin: 0 0 8px; font-size: 1.05rem; }}
+  .lp3-card p {{ margin: 0; color: rgba(255,255,255,0.6); font-size: 0.88rem; line-height: 1.55; }}
+
+  .lp3-photo-card {{ position: relative; border-radius: var(--radius-2xl); overflow: hidden; border: 1px solid rgba(255,255,255,0.1); transition: transform .3s; }}
+  .lp3-photo-card:hover {{ transform: translateY(-8px); }}
+  .lp3-photo-card img {{ width: 100%; height: 240px; object-fit: cover; display: block; transition: transform .5s; }}
+  .lp3-photo-card:hover img {{ transform: scale(1.08); }}
+  .lp3-photo-card__overlay {{ position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(11,17,23,0.95) 100%); }}
+  .lp3-photo-card__body {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 22px; }}
+  .lp3-photo-card__body h3 {{ margin: 0 0 6px; }}
+  .lp3-photo-card__body p {{ margin: 0; color: rgba(255,255,255,0.75); font-size: 0.88rem; line-height: 1.5; }}
+
+  .lp3-why__layout {{ display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }}
+  .lp3-why__image {{ position: relative; }}
+  .lp3-why__image img {{ width: 100%; border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); }}
+  .lp3-why__badge {{ position: absolute; bottom: -18px; right: -18px; background: var(--color-primary); border: 1px solid var(--color-accent); border-radius: var(--radius-lg); padding: 12px 20px; text-align: center; }}
+  .lp3-why__badge span {{ display: block; font-size: 0.7rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.06em; }}
+  .lp3-why__badge strong {{ font-size: 1.2rem; color: var(--color-accent-strong); }}
+  .lp3-why__content h2 {{ font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 800; margin: 0 0 28px; }}
+  .lp3-feature {{ display: flex; gap: 16px; margin-bottom: 24px; }}
+  .lp3-feature__icon {{ width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--radius-lg); background: var(--color-accent-soft); display: flex; align-items: center; justify-content: center; }}
+  .lp3-feature__icon svg {{ width: 20px; height: 20px; fill: var(--color-accent-strong); }}
+  .lp3-feature h4 {{ margin: 0 0 4px; font-size: 1rem; }}
+  .lp3-feature p {{ margin: 0; color: rgba(255,255,255,0.6); font-size: 0.88rem; }}
+
+  .lp3-quote {{ background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-xl); padding: 28px; }}
+  .lp3-quote p {{ margin: 0 0 20px; color: rgba(255,255,255,0.82); font-size: 0.95rem; line-height: 1.6; font-style: italic; }}
+  .lp3-quote__author {{ display: flex; align-items: center; gap: 12px; }}
+  .lp3-avatar {{ width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong)); color: var(--color-ink); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; }}
+  .lp3-quote__author strong {{ display: block; font-size: 0.9rem; }}
+  .lp3-quote__author span {{ font-size: 0.78rem; color: rgba(255,255,255,0.55); }}
+
+  .lp3-final {{ position: relative; padding: 120px 0; text-align: center; overflow: hidden; }}
+  .lp3-final-bg {{ position: absolute; inset: 0; z-index: 0; }}
+  .lp3-final-bg img {{ width: 100%; height: 100%; object-fit: cover; }}
+  .lp3-final-overlay {{ position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,17,23,0.92), rgba(11,17,23,0.78)); }}
+  .lp3-final__inner {{ position: relative; z-index: 1; }}
+  .lp3-final__inner h2 {{ font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin: 0 0 12px; }}
+  .lp3-final__inner p {{ color: rgba(255,255,255,0.7); margin: 0 0 32px; }}
+
+  .lp3-footer {{ border-top: 1px solid var(--color-line); padding: 56px 0 24px; background: var(--color-ink-soft); }}
+  .lp3-footer__top {{ display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }}
+  .lp3-footer__brand p {{ color: rgba(255,255,255,0.55); font-size: 0.88rem; margin-top: 14px; line-height: 1.6; max-width: 320px; }}
+  .lp3-footer__col h5 {{ font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.45); margin: 0 0 14px; }}
+  .lp3-footer__col a {{ display: block; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem; margin-bottom: 10px; }}
+  .lp3-footer__col a:hover {{ color: var(--color-accent-strong); }}
+  .lp3-footer__bottom {{ border-top: 1px solid var(--color-line); padding-top: 20px; color: rgba(255,255,255,0.4); font-size: 0.82rem; }}
+
+  .lp3-fab {{ position: fixed; bottom: 28px; right: 28px; z-index: 80; display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; border-radius: var(--radius-full); background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong)); color: var(--color-ink); font-weight: 700; font-size: 0.9rem; text-decoration: none; box-shadow: 0 10px 30px rgba(245,158,11,0.45); opacity: 0; transform: translateY(20px) scale(0.9); pointer-events: none; transition: opacity .3s, transform .3s; }}
+  .lp3-fab.visible {{ opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }}
+  .lp3-fab:hover {{ transform: translateY(-3px) scale(1.03); }}
+
+  .reveal {{ opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }}
+  .reveal.in {{ opacity: 1; transform: translateY(0); }}
+
+  @media (max-width: 960px) {{
+    .lp3-nav {{ display: none; }}
+    .lp3-grid4, .lp3-grid3 {{ grid-template-columns: repeat(2, 1fr); }}
+    .lp3-stats-grid {{ grid-template-columns: repeat(2, 1fr); }}
+    .lp3-why__layout {{ grid-template-columns: 1fr; gap: 32px; }}
+    .lp3-footer__top {{ grid-template-columns: 1fr; }}
+    .lp3-fab {{ bottom: 18px; right: 18px; padding: 12px 20px; font-size: 0.85rem; }}
+  }}
+  @media (max-width: 560px) {{
+    .lp3-grid4, .lp3-grid3, .lp3-stats-grid {{ grid-template-columns: 1fr; }}
+  }}
+</style>
+
+<script>
+(function () {{
+  var els = document.querySelectorAll(".reveal");
+  var io = new IntersectionObserver(function (entries) {{
+    entries.forEach(function (e) {{
+      if (e.isIntersecting) {{ e.target.classList.add("in"); io.unobserve(e.target); }}
+    }});
+  }}, {{ threshold: 0.15 }});
+  els.forEach(function (el) {{ io.observe(el); }});
+
+  var counters = document.querySelectorAll("[data-count]");
+  var counted = false;
+  function runCounters() {{
+    if (counted) return;
+    counted = true;
+    counters.forEach(function (c) {{
+      var target = parseInt(c.getAttribute("data-count"), 10);
+      var current = 0;
+      var step = Math.max(1, Math.round(target / 40));
+      var t = setInterval(function () {{
+        current += step;
+        if (current >= target) {{ current = target; clearInterval(t); }}
+        c.textContent = current;
+      }}, 30);
+    }});
+  }}
+  var statsBlock = document.querySelector(".lp3-stats-grid");
+  if (statsBlock) {{
+    var io2 = new IntersectionObserver(function (entries) {{
+      entries.forEach(function (e) {{ if (e.isIntersecting) runCounters(); }});
+    }}, {{ threshold: 0.3 }});
+    io2.observe(statsBlock);
+  }}
+
+  var liveEl = document.getElementById("liveCount");
+  if (liveEl) {{
+    setInterval(function () {{
+      var base = 46;
+      var wobble = Math.floor(Math.random() * 5) - 2;
+      liveEl.textContent = Math.max(41, base + wobble);
+    }}, 4000);
+  }}
+
+  var header = document.getElementById("siteHeader");
+  var heroSection = document.getElementById("hero");
+  window.addEventListener("scroll", function () {{
+    if (window.scrollY > 40) {{
+      header.classList.add("scrolled");
+    }} else {{
+      header.classList.remove("scrolled");
+    }}
+
+    var img = document.getElementById("parallaxImg");
+    if (img && heroSection) {{
+      var rect = heroSection.getBoundingClientRect();
+      if (rect.bottom > 0) {{
+        var offset = window.scrollY * 0.25;
+        img.style.transform = "translateY(" + offset + "px)";
+      }}
+    }}
+
+    var fab = document.getElementById("stickyFab");
+    if (fab) {{
+      if (window.scrollY > window.innerHeight * 0.8) {{
+        fab.classList.add("visible");
+      }} else {{
+        fab.classList.remove("visible");
+      }}
+    }}
+  }}, {{ passive: true }});
+
+  var navLinks = document.querySelectorAll('.lp3-nav a[data-nav]');
+  var sections = [];
+  navLinks.forEach(function (link) {{
+    var id = link.getAttribute("data-nav");
+    var section = document.getElementById(id);
+    if (section) sections.push({{ link: link, section: section }});
+  }});
+  var navObserver = new IntersectionObserver(function (entries) {{
+    entries.forEach(function (entry) {{
+      var match = sections.find(function (s) {{ return s.section === entry.target; }});
+      if (!match) return;
+      if (entry.isIntersecting) {{
+        navLinks.forEach(function (l) {{ l.classList.remove("active"); }});
+        match.link.classList.add("active");
+      }}
+    }});
+  }}, {{ threshold: 0.4, rootMargin: "-80px 0px -50% 0px" }});
+  sections.forEach(function (s) {{ navObserver.observe(s.section); }});
+}})();
+</script>"""
+
+    return base_layout(title="3D Marketplace | From Design to Production", body=body)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ABOUT PAGE
+# ─────────────────────────────────────────────────────────────────────────────
+
+def about_page(**kwargs):
+    index_url = url_for("index")
+    about_url = url_for("about")
+    login_url = url_for("auth.login")
+    register_url = url_for("auth.register")
+
+    body = f"""<div class="landing-page">
+  <header class="landing-header">
+    <div class="landing-shell">
+      <div class="landing-brand" aria-label="3D Marketplace home">
+        <div class="landing-brand__mark">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <span>3D Marketplace</span>
+      </div>
+      <nav class="landing-nav" aria-label="Main navigation">
+        <a href="{index_url}#how-it-works">How it works</a>
+        <a href="{index_url}#processes">Processes</a>
+        <a href="{about_url}">About</a>
+      </nav>
+      <div class="landing-header__actions">
+        <a class="btn btn-secondary btn-sm" href="{login_url}">Log In</a>
+        <a class="btn btn-primary btn-sm" href="{register_url}">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="landing-hero">
+      <div class="landing-shell landing-hero__layout">
+        <div class="landing-hero__content">
+          <div class="eyebrow">Who we are</div>
+          <h1>Building the bridge between design and production.</h1>
+          <p>
+            3D Marketplace connects engineers and product teams with a vetted network of CNC, 3D printing, and laser cutting manufacturers, so every design finds the right partner without the back-and-forth.
+          </p>
+          <div class="landing-proof">
+            <div>
+              <strong>46+</strong>
+              <span>Qualified shops</span>
+            </div>
+            <div>
+              <strong>24h</strong>
+              <span>Avg. match time</span>
+            </div>
+            <div>
+              <strong>99.2%</strong>
+              <span>On-time delivery</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="visual-panel panel-primary">
+            <div class="panel-label">Our network</div>
+            <div class="panel-line"></div>
+            <div class="panel-grid">
+              <div class="panel-box"></div>
+              <div class="panel-box panel-box--accent"></div>
+              <div class="panel-box"></div>
+              <div class="panel-box panel-box--accent"></div>
+            </div>
+            <div class="panel-metrics">
+              <div>
+                <span>Manufacturers</span>
+                <strong>46+</strong>
+              </div>
+              <div>
+                <span>States covered</span>
+                <strong>12</strong>
+              </div>
+            </div>
+          </div>
+          <div class="floating-card small-card">
+            <span>Founded</span>
+            <strong>2024</strong>
+          </div>
+          <div class="floating-card mid-card">
+            <span>Focus</span>
+            <strong>Precision parts</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-section">
+      <div class="landing-shell">
+        <div class="section-heading">
+          <div class="eyebrow">Our mission</div>
+          <h2>Making precision manufacturing accessible to everyone</h2>
+        </div>
+        <div class="steps-grid">
+          <article class="step-card">
+            <div class="step-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <span class="step-card__index">01</span>
+            <h3>Our Vision</h3>
+            <p>A world where any team, from solo makers to large enterprises, can turn a design file into a finished part without friction.</p>
+          </article>
+
+          <article class="step-card">
+            <div class="step-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16v2H4v-2zm2-4h2V7H6v7zm5 0h2V4h-2v10zm5 0h2v-6h-2v6z"/></svg>
+            </div>
+            <span class="step-card__index">02</span>
+            <h3>Our Standards</h3>
+            <p>Every manufacturer in our network is vetted for equipment, quality control, and on-time delivery before joining the platform.</p>
+          </article>
+
+          <article class="step-card">
+            <div class="step-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.41l-7.29 7.3-1.42-1.42 7.3-7.29H14V3zm-2 3H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7h-2v7H5V8h7V6z"/></svg>
+            </div>
+            <span class="step-card__index">03</span>
+            <h3>Our Growth</h3>
+            <p>We are expanding our manufacturer network every month, adding new processes, materials, and regional coverage.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-section landing-section--dark">
+      <div class="landing-shell">
+        <div class="section-heading section-heading--center">
+          <div class="eyebrow">Why choose us</div>
+          <h2>A platform built on trust and precision</h2>
+        </div>
+        <div class="process-grid">
+          <article class="process-card">
+            <div class="process-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+            </div>
+            <h3>Vetted Manufacturers</h3>
+            <p>Every shop is reviewed for capability, quality history, and capacity before it can accept orders.</p>
+          </article>
+
+          <article class="process-card">
+            <div class="process-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 9.7-8 12-4.5-2.3-8-7-8-12V6l8-4zm0 5.5L7 8.6v4.1c0 3.4 2.2 6.5 5 8.2 2.8-1.7 5-4.8 5-8.2V8.6l-5-1.1zm1.5 2.3h2v5h-2v-5zm-1 7.6h2v2h-2v-2z"/></svg>
+            </div>
+            <h3>Secure Orders</h3>
+            <p>Full order tracking and transparent status updates from request to delivery, every step of the way.</p>
+          </article>
+
+          <article class="process-card">
+            <div class="process-card__icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <h3>Dedicated Support</h3>
+            <p>Our team is on hand to help resolve questions on materials, tolerances, and production timelines.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="about" class="landing-footer">
+    <div class="landing-shell landing-footer__inner">
+      <div>
+        <div class="landing-brand landing-brand--footer">
+          <div class="landing-brand__mark">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+          </div>
+          <span>3D Marketplace</span>
+        </div>
+      </div>
+      <div class="landing-footer__links">
+        <a href="{login_url}">Login</a>
+        <a href="{register_url}">Register</a>
+        <a href="{about_url}">About</a>
+      </div>
+    </div>
+  </footer>
+</div>"""
+
+    return base_layout(title="About Us | 3D Marketplace", body=body)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ERROR PAGES (404 / 500)  — use base_layout, no sidebar
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _error_card(heading, message, session_role=None):
+    """Shared card body for 404 and 500."""
+    index_url = url_for("index")
+    dashboard_btn = ""
+    if session_role == "customer":
+        dashboard_url = url_for("customer.dashboard")
+        dashboard_btn = f'<a class="btn btn-secondary" href="{dashboard_url}">Go to Dashboard</a>'
+    elif session_role == "manufacturer":
+        dashboard_url = url_for("manufacturer.dashboard")
+        dashboard_btn = f'<a class="btn btn-secondary" href="{dashboard_url}">Go to Dashboard</a>'
+    elif session_role == "admin":
+        dashboard_url = url_for("admin.dashboard")
+        dashboard_btn = f'<a class="btn btn-secondary" href="{dashboard_url}">Go to Dashboard</a>'
+
+    return f"""<div class="app-shell" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:var(--space-8);">
+  <div class="card" style="max-width:560px;width:100%;padding:var(--space-8);">
+    <div class="sidebar__brand" style="margin-bottom:var(--space-6);padding:0;display:flex;align-items:center;gap:var(--space-3);">
+      <div class="sidebar__brand-icon" aria-hidden="true" style="width:40px;height:40px;border-radius:10px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <div>
+        <div class="sidebar__brand-name">3D Marketplace</div>
+      </div>
+    </div>
+    <h1 style="margin:0 0 var(--space-3);font-size:var(--font-size-h2);">{heading}</h1>
+    <p class="text-muted text-sm" style="margin-bottom:var(--space-6);">
+      {message}
+    </p>
+    <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;">
+      <a class="btn btn-primary" href="{index_url}">Back to Home</a>
+      {dashboard_btn}
+    </div>
+  </div>
+</div>"""
+
+
+def not_found_page(session_role=None, **kwargs):
+    body = _error_card(
+        "Page not found",
+        "The page you were looking for doesn't exist or may have moved.",
+        session_role=session_role,
+    )
+    return base_layout(title="Page Not Found | 3D Marketplace", body=body)
+
+
+def server_error_page(session_role=None, **kwargs):
+    body = _error_card(
+        "Something went wrong",
+        "We hit an unexpected issue while loading this page. Please try again or head back to the dashboard.",
+        session_role=session_role,
+    )
+    return base_layout(title="Something went wrong | 3D Marketplace", body=body)
