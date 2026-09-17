@@ -356,10 +356,12 @@ def saved_designs_page(designs, current_user=None, **kwargs):
             status = e(d.get("status") if hasattr(d, "get") else getattr(d, "status", ""))
             action_url = d.get("action_url") if hasattr(d, "get") else getattr(d, "action_url", None)
             action_label = e(d.get("action_label") if hasattr(d, "get") else getattr(d, "action_label", ""))
+            download_url = d.get("download_url") if hasattr(d, "get") else getattr(d, "download_url", None)
             if action_url:
                 action_cell = f'<a class="btn btn-primary btn-sm" href="{e(action_url)}">{action_label}</a>'
             else:
                 action_cell = '<span class="text-muted text-sm">No action</span>'
+            action_cell += f' <a class="btn btn-secondary btn-sm" href="{e(download_url)}">Download</a>' if download_url else ""
             rows_html.append(
                 f"""          <tr>
             <td>{fn}</td>

@@ -2,7 +2,7 @@ import os
 from flask import Blueprint, request, redirect, url_for, session, flash
 from app.extensions import db
 from app.utils.auth_decorators import role_required
-from app.services.file_service import save_upload
+from app.services.file_service import create_signed_url, save_upload
 from app.services.matching_service import (
     find_matching_manufacturers,
     find_matching_manufacturers_via_hash,
@@ -370,12 +370,33 @@ def saved_designs():
                 "status": status,
                 "action_label": action_label,
                 "action_url": action_url,
+                "download_url": url_for("customer.download_file", file_id=row["file_id"]),
             }
         )
 
     return saved_designs_page(
         designs=designs,
     )
+
+
+@customer_bp.route("/files/<int:file_id>")
+@role_required("customer")
+def download_file(file_id):
+    row = db.session.execute(
+        db.text(
+            "SELECT filename, storage_path FROM uploaded_files "
+            "WHERE file_id=:fid AND user_id=:uid"
+        ),
+        {"fid": file_id, "uid": session["user_id"]},
+    ).mappings().first()
+    if not row:
+        flash("File not found.", "error")
+        return redirect(url_for("customer.saved_designs"))
+    signed_url = create_signed_url(row["storage_path"])
+    if not signed_url:
+        flash("Could not create a secure file link.", "error")
+        return redirect(url_for("customer.saved_designs"))
+    return redirect(signed_url)
 
 
 @customer_bp.route("/orders")

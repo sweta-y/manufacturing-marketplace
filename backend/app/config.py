@@ -9,6 +9,7 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-later")
     SUPABASE_URL = os.getenv("SUPABASE_URL")
     SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+    SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
     SQLALCHEMY_DATABASE_URI = (
         f"postgresql://{os.getenv('DB_USER','postgres')}:{os.getenv('DB_PASSWORD','')}"
         f"@{os.getenv('DB_HOST','localhost')}:{os.getenv('DB_PORT','5432')}"
