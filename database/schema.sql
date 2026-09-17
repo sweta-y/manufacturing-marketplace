@@ -82,7 +82,7 @@ CREATE TABLE manufacturing_requests (
     file_id         INT REFERENCES uploaded_files(file_id),
     process_id      INT REFERENCES manufacturing_processes(process_id),
     material_id     INT REFERENCES materials(material_id),
-    quantity        INT NOT NULL CHECK (quantity > 0),
+    quantity        INT CHECK (quantity > 0),
     surface_finish  VARCHAR(50),
     notes           TEXT,
     estimated_cost  NUMERIC(10,2),
