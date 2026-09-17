@@ -3,6 +3,7 @@ from app.extensions import db, bcrypt
 from app.models.user import User
 from app.utils.auth_decorators import login_required
 from app.pyui.auth_pages import login_page, register_page, register_manufacturer_page
+from app.services.supabase_client import supabase_sign_in, supabase_sign_up
 
 
 auth_bp = Blueprint("auth", __name__)
@@ -35,8 +36,27 @@ def login():
     password = request.form.get("password", "")
     next_url = request.form.get("next")
 
-    user = User.query.filter_by(email=email).first()
-    if not user or not bcrypt.check_password_hash(user.password_hash, password):
+    supabase_ok, supabase_data = supabase_sign_in(email, password)
+    user = None
+    if supabase_ok:
+        supabase_uid = supabase_data["id"]
+        user = User.query.filter_by(supabase_uid=supabase_uid).first()
+        if not user:
+            user = User.query.filter_by(email=email).first()
+            if user and not user.supabase_uid:
+                user.supabase_uid = supabase_uid
+                db.session.commit()
+        if not user:
+            flash("Supabase login succeeded, but local account setup is incomplete.", "error")
+            return login_page(next_url=next_url, email=email), 401
+    else:
+        # Backward compatibility for seed accounts that only have local bcrypt hashes.
+        user = User.query.filter_by(email=email).first()
+        if not user or not user.password_hash or not bcrypt.check_password_hash(user.password_hash, password):
+            flash("Invalid email or password.", "error")
+            return login_page(next_url=next_url, email=email), 401
+
+    if not user:
         flash("Invalid email or password.", "error")
         return login_page(next_url=next_url, email=email), 401
 
@@ -73,10 +93,15 @@ def register():
         flash("Email already registered.", "error")
         return register_page(form=form), 400
 
-    pwd_hash = bcrypt.generate_password_hash(password).decode("utf-8")
+    supabase_ok, supabase_data = supabase_sign_up(form["email"], password)
+    if not supabase_ok:
+        flash(f"Registration failed: {supabase_data}", "error")
+        return register_page(form=form), 400
+
     user = User(
         email=form["email"],
-        password_hash=pwd_hash,
+        password_hash=None,
+        supabase_uid=supabase_data["id"],
         role="customer",
         full_name=form["full_name"],
         phone=form["phone"] or None,
@@ -89,8 +114,14 @@ def register():
     )
     db.session.commit()
 
-    flash("Registered successfully. Please log in.", "success")
-    return redirect(url_for("auth.login"))
+    if not supabase_data.get("email_confirmed", True):
+        flash("Registered successfully. Confirm your email before logging in.", "success")
+        return redirect(url_for("auth.login"))
+
+    session["user_id"] = user.user_id
+    session["role"] = user.role
+    flash("Registered successfully.", "success")
+    return _redirect_after_login(user)
 
 
 @auth_bp.route("/register-manufacturer", methods=["GET", "POST"])
@@ -114,10 +145,15 @@ def register_manufacturer():
         flash("Email already registered.", "error")
         return register_manufacturer_page(form=form), 400
 
-    pwd_hash = bcrypt.generate_password_hash(password).decode("utf-8")
+    supabase_ok, supabase_data = supabase_sign_up(form["email"], password)
+    if not supabase_ok:
+        flash(f"Registration failed: {supabase_data}", "error")
+        return register_manufacturer_page(form=form), 400
+
     user = User(
         email=form["email"],
-        password_hash=pwd_hash,
+        password_hash=None,
+        supabase_uid=supabase_data["id"],
         role="manufacturer",
         full_name=form["full_name"],
         phone=form["phone"] or None,
@@ -133,8 +169,14 @@ def register_manufacturer():
     )
     db.session.commit()
 
-    flash("Manufacturer registered — pending approval. Please log in.", "success")
-    return redirect(url_for("auth.login"))
+    if not supabase_data.get("email_confirmed", True):
+        flash("Manufacturer registered. Confirm your email before logging in.", "success")
+        return redirect(url_for("auth.login"))
+
+    session["user_id"] = user.user_id
+    session["role"] = user.role
+    flash("Manufacturer registered — pending approval.", "success")
+    return _redirect_after_login(user)
 
 
 @auth_bp.route("/logout", methods=["POST"])

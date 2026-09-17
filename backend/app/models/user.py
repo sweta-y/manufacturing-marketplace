@@ -4,7 +4,8 @@ class User(db.Model):
     __tablename__ = "users"
     user_id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=True)
+    supabase_uid = db.Column(db.String(255), unique=True, nullable=True)
     role = db.Column(db.String(20), nullable=False)
     full_name = db.Column(db.String(150), nullable=False)
     phone = db.Column(db.String(20))

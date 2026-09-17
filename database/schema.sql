@@ -1,7 +1,8 @@
 CREATE TABLE users (
     user_id         SERIAL PRIMARY KEY,
     email           VARCHAR(255) UNIQUE NOT NULL,
-    password_hash   VARCHAR(255) NOT NULL,
+    password_hash   VARCHAR(255),
+    supabase_uid    VARCHAR(255) UNIQUE,
     role            VARCHAR(20) NOT NULL CHECK (role IN ('customer','manufacturer','admin')),
     full_name       VARCHAR(150) NOT NULL,
     phone           VARCHAR(20),

@@ -1,8 +1,10 @@
 """End-to-end test of all converted Flask pages and forms."""
 import io
+import os
 import re
 import sys
 import traceback
+from unittest.mock import patch
 from app import create_app
 from app.extensions import db
 
@@ -125,24 +127,44 @@ def run_tests():
             client.get("/logout", follow_redirects=True)
             import uuid
             new_email = f"e2e.customer.{uuid.uuid4().hex[:8]}@test.com"
-            r = client.post("/register", data={
-                "full_name": "E2E Customer",
-                "email": new_email,
-                "phone": "555-9999",
-                "password": PASSWORD,
-            }, follow_redirects=True)
+            def fake_supabase_sign_up(email, password):
+                return True, {
+                    "id": f"e2e-{uuid.uuid4().hex}",
+                    "uid": f"e2e-{uuid.uuid4().hex}",
+                    "email_confirmed": True,
+                }
+
+            # Supabase free-tier signup rate limits make random remote signups unsuitable for E2E.
+            signup_patch = patch(
+                "app.routes.auth_routes.supabase_sign_up",
+                side_effect=fake_supabase_sign_up,
+            ) if os.getenv("SUPABASE_URL") else patch("app.routes.auth_routes.supabase_sign_up")
+            with signup_patch as mocked_signup:
+                if not os.getenv("SUPABASE_URL"):
+                    mocked_signup.return_value = (True, {
+                        "id": f"e2e-{uuid.uuid4().hex}",
+                        "uid": f"e2e-{uuid.uuid4().hex}",
+                        "email_confirmed": True,
+                    })
+                r = client.post("/register", data={
+                    "full_name": "E2E Customer",
+                    "email": new_email,
+                    "phone": "555-9999",
+                    "password": PASSWORD,
+                }, follow_redirects=True)
             uid = get_user_id(new_email)
             record("POST /register (customer)", r.status_code == 200 and uid is not None, "user not in DB" if not uid else "")
 
             # POST register manufacturer
             new_mfg_email = f"e2e.mfg.{uuid.uuid4().hex[:8]}@test.com"
-            r = client.post("/register-manufacturer", data={
-                "full_name": "E2E Manufacturer",
-                "business_name": "E2E Fab Co",
-                "email": new_mfg_email,
-                "phone": "555-8888",
-                "password": PASSWORD,
-            }, follow_redirects=True)
+            with patch("app.routes.auth_routes.supabase_sign_up", side_effect=fake_supabase_sign_up):
+                r = client.post("/register-manufacturer", data={
+                    "full_name": "E2E Manufacturer",
+                    "business_name": "E2E Fab Co",
+                    "email": new_mfg_email,
+                    "phone": "555-8888",
+                    "password": PASSWORD,
+                }, follow_redirects=True)
             uid_m = get_user_id(new_mfg_email)
             record("POST /register-manufacturer", r.status_code == 200 and uid_m is not None)
 
@@ -207,7 +229,6 @@ def run_tests():
             client.get("/logout", follow_redirects=True)
             login(client, "customer")
             stl_path = app.root_path.replace("app", "").replace("\\app", "") + "/../test.stl"
-            import os
             stl_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "test.stl"))
             if not os.path.exists(stl_path):
                 stl_content = b"solid test\nendsolid test\n"
