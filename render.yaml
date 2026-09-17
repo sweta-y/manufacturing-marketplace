@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: manufacturing-marketplace
+    runtime: python
+    buildCommand: >-
+      pip install -r backend/requirements.txt &&
+      gcc -O2 -o backend/c_module/cost_estimator backend/c_module/cost_estimator.c &&
+      gcc -O2 -o backend/c_module/priority_queue backend/c_module/priority_queue.c &&
+      gcc -O2 -o backend/c_module/match_hash backend/c_module/match_hash.c &&
+      gcc -O2 -o backend/c_module/notif_ring backend/c_module/notif_ring.c
+    startCommand: gunicorn --chdir backend --bind 0.0.0.0:$PORT run:app
+    envVars:
+      - key: SUPABASE_DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true

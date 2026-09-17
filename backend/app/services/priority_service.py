@@ -8,7 +8,7 @@ from datetime import datetime
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 C_MODULE_DIR = os.path.join(BACKEND_DIR, "c_module")
-BIN_NAMES = ["priority_queue.exe", "priority_queue"]
+BIN_NAMES = ["priority_queue.exe", "priority_queue"] if os.name == "nt" else ["priority_queue"]
 
 
 def _find_binary():

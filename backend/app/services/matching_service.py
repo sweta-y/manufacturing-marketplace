@@ -4,7 +4,7 @@ from app.extensions import db
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 C_MODULE_DIR = os.path.join(BACKEND_DIR, "c_module")
-BIN_NAMES = ["match_hash.exe", "match_hash"]
+BIN_NAMES = ["match_hash.exe", "match_hash"] if os.name == "nt" else ["match_hash"]
 
 
 def _find_binary():
@@ -42,7 +42,7 @@ def find_matching_manufacturers(process_id, material_id, quantity):
 def find_matching_manufacturers_via_hash(process_id, material_id, quantity):
     """
     Match customer request (process_id, material_id, quantity) using separate-chaining
-    hash table C binary (match_hash / match_hash.exe).
+    hash table C binary (match_hash).
 
     Returns:
         (matches, used_fallback)

@@ -21,9 +21,10 @@ _MATERIALS = {
 
 
 def get_cost_estimator_path():
-    """Return the full path to cost_estimator.exe."""
+    """Return the platform-specific path to the cost estimator binary."""
     backend_dir = Path(__file__).parent.parent.parent
-    return backend_dir / "c_module" / "cost_estimator.exe"
+    binary_name = "cost_estimator.exe" if os.name == "nt" else "cost_estimator"
+    return backend_dir / "c_module" / binary_name
 
 
 def _estimate_cost_fallback(process_id, material_id, quantity):
@@ -62,7 +63,7 @@ def _estimate_cost_fallback(process_id, material_id, quantity):
 
 def estimate_cost(process_id, material_id, quantity):
     """
-    Call cost_estimator.exe with process, material, and quantity.
+    Call the platform-specific cost estimator binary with process, material, and quantity.
     Falls back to Python estimator if exe is not available.
     
     Returns: dict with keys {estimated_cost, estimated_time_hours}

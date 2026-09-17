@@ -44,3 +44,4 @@
 
 ## Known environment gotcha (for setup on a new machine)
 - Windows par Smart App Control (agar Evaluation/On mode mein ho) unsigned GCC-built `.exe` files ko block kar sakta hai. Fix: **Settings > Privacy & security > Windows Security > App & browser control > Smart App Control > Off**, phir restart.
+- `manufacturing_requests.quantity` intentionally nullable hai, kyunki draft requests upload ke baad configuration se pehle quantity ke bina exist kar sakti hain.

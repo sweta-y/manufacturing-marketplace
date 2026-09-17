@@ -5,7 +5,7 @@ from app.extensions import db
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 C_MODULE_DIR = os.path.join(BACKEND_DIR, "c_module")
-BIN_NAMES = ["notif_ring.exe", "notif_ring"]
+BIN_NAMES = ["notif_ring.exe", "notif_ring"] if os.name == "nt" else ["notif_ring"]
 
 
 def _find_binary():
