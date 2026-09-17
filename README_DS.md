@@ -26,6 +26,17 @@
 - **Called from:** `backend/app/services/notification_service.py` -> `get_recent_notifications_via_ring()`
 - **Fallback:** SQL-based recent-notifications query.
 
+## 4. Real Authentication (Supabase Auth)
+- **Files:** `backend/app/services/supabase_client.py`, `backend/app/routes/auth_routes.py`
+- **Problem solved:** Pehle sirf hardcoded/seed-data users hi login kar sakte the. Ab koi bhi real email se signup/login ho sakta hai.
+- **Architecture:** Supabase sirf authentication (email/password verify, signup) ke liye use hota hai. Poora app data (orders, machines, matching, notifications) local PostgreSQL mein hi rehta hai — isse touch nahi kiya gaya.
+- **Flow:**
+	- **Signup:** `supabase_sign_up(email, password)` Supabase mein account banata hai, fir local `users` table mein ek row insert hoti hai (`supabase_uid` column se link, `password_hash=NULL` kyunki password ab Supabase manage karta hai).
+	- **Login:** Pehle `supabase_sign_in()` try hota hai (naye users ke liye). Agar wo fail ho (jaise purane seed users jo Supabase mein registered nahi hain), to bcrypt-based local check fallback ke roop mein try hota hai — isse purane test accounts (`sarah.chen@...`, admin, manufacturer) bina toote chalte rehte hain.
+- **Database change:** `users.password_hash` NULLABLE bana diya gaya, ek naya column `users.supabase_uid` (unique, nullable) add hua jo Supabase ke `auth.users.id` (UUID) ko local user se link karta hai.
+- **Backward compatibility:** Verified ki purana bcrypt login abhi bhi kaam karta hai (`sarah.chen@acmeindustries.com`), aur naya real-email signup/login bhi end-to-end verify hua hai (Supabase Dashboard confirm + Flask session dono se).
+- **Note for setup on a new machine:** Naye Supabase project ka `SUPABASE_URL`, `SUPABASE_ANON_KEY` `.env` mein chahiye. `Authentication > Providers > Email > Confirm email` ko Off rakhna demo/dev ke liye simplest hai (production mein On recommended).
+
 ## Common pattern across all three
 - Har C binary independent standalone program hai, stdin se input leta hai, stdout pe result deta hai (koi shared library/FFI complexity nahi).
 - Har ek ka Python fallback hai jo binary fail hone par activate hota hai, aur `used_fallback` flag se track hota hai.
