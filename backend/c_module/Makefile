@@ -7,7 +7,7 @@ else
     EXT =
 endif
 
-TARGETS = cost_estimator$(EXT) priority_queue$(EXT) match_hash$(EXT)
+TARGETS = cost_estimator$(EXT) priority_queue$(EXT) match_hash$(EXT) notif_ring$(EXT)
 
 all: $(TARGETS)
 
@@ -18,6 +18,9 @@ priority_queue$(EXT): priority_queue.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 match_hash$(EXT): match_hash.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+notif_ring$(EXT): notif_ring.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
