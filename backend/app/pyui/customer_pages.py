@@ -4,40 +4,160 @@ from app.pyui.helpers import e, format_date, format_datetime, format_cost, order
 from app.pyui.layout import portal_page
 
 
-def dashboard_page(order_count=0, draft_design_count=0, current_user=None, **kwargs):
+def production_status_label(status):
+    if status in ("Request Submitted", "Manufacturer Selected"):
+        return "Awaiting Production"
+    return status or "—"
+
+
+def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
+                   in_production_count=0, recent_orders=None, production_orders=None,
+                   recent_designs=None, current_user=None, **kwargs):
     if current_user is None and "user_id" in session:
         current_user = User.query.get(session["user_id"])
     user_name = e(current_user.full_name) if current_user and current_user.full_name else ""
     saved_designs_url = url_for("customer.saved_designs")
     upload_url = url_for("customer.upload_design")
     orders_url = url_for("customer.orders")
+    track_url = url_for("customer.track_production")
+    recent_orders = recent_orders or []
+    production_orders = production_orders or []
+    recent_designs = recent_designs or []
+
+    stats = [
+        (order_count, "Total Orders"),
+        (active_order_count, "Active Orders"),
+        (draft_design_count, "Draft Designs"),
+        (in_production_count, "In Production"),
+    ]
+    stats_html = "".join(
+        f'''<div class="card"><div class="card__body" style="padding:var(--space-5) var(--space-6);">
+          <div style="font-size:var(--font-size-h3);font-weight:var(--font-weight-bold);">{e(value)}</div>
+          <div class="text-muted text-sm">{label}</div>
+        </div></div>'''
+        for value, label in stats
+    )
+
+    if recent_orders:
+        order_rows = []
+        for order in recent_orders:
+            order_id = order.get("order_id")
+            detail_url = url_for("customer.order_detail", order_id=order_id)
+            status_label = production_status_label(order.get("status"))
+            order_rows.append(
+                f'''<tr>
+                  <td>#{e(order_id)}</td>
+                  <td>{e(order.get("filename") or "—")}</td>
+                  <td>{e(order.get("process_name") or "—")}</td>
+                  <td>{order_status_badge(status_label)}</td>
+                  <td>{e(format_date(order.get("created_at")))}</td>
+                  <td><a class="text-link" href="{detail_url}">View</a></td>
+                </tr>'''
+            )
+        recent_orders_html = f'''<div class="table-wrapper">
+          <table class="table" aria-label="Recent customer orders">
+            <thead><tr><th scope="col">Order</th><th scope="col">Design / Part</th><th scope="col">Process</th><th scope="col">Status</th><th scope="col">Date</th><th scope="col">Action</th></tr></thead>
+            <tbody>{"".join(order_rows)}</tbody>
+          </table>
+        </div>'''
+    else:
+        recent_orders_html = f'''<div class="empty-state" style="padding:var(--space-8) var(--space-4);">
+          <h3 class="empty-state__title">No orders yet</h3>
+          <p class="empty-state__desc">Orders you place will appear here.</p>
+          <a class="btn btn-primary" href="{upload_url}">Upload Design</a>
+        </div>'''
+
+    production_cards = []
+    for order in production_orders[:3]:
+        order_id = order.get("order_id")
+        expected = order.get("expected_completion")
+        expected_html = f'<p class="text-muted text-sm">Estimated completion: {e(format_date(expected))}</p>' if expected else ""
+        history = order.get("history") or []
+        history_html = ""
+        if history:
+            history_html = "".join(
+                f'<li><strong>{e(event.get("status"))}</strong> <span class="text-muted text-sm">{e(format_datetime(event.get("changed_at")))}</span></li>'
+                for event in history[-3:]
+            )
+            history_html = f'<ol style="padding-left:var(--space-5);margin:var(--space-2) 0;">{history_html}</ol>'
+        production_cards.append(
+            f'''<div style="padding:var(--space-3) 0;border-bottom:1px solid var(--color-border);">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap;">
+                <strong>{e(order.get("filename") or "Design")}</strong>{order_status_badge(production_status_label(order.get("status")))}
+              </div>
+              <p class="text-muted text-sm">Order #{e(order_id)}</p>
+              {expected_html}{history_html}
+            </div>'''
+        )
+    if production_cards:
+        production_html = "".join(production_cards)
+        if len(production_orders) > 3:
+            production_html += f'<p class="text-muted text-sm">Showing 3 of {e(len(production_orders))} active orders.</p>'
+    else:
+        production_html = '''<div class="empty-state" style="padding:var(--space-8) var(--space-4);">
+          <h3 class="empty-state__title">No active production</h3>
+          <p class="empty-state__desc">Your active manufacturing orders will appear here.</p>
+        </div>'''
+
+    if recent_designs:
+        design_cards = []
+        for design in recent_designs:
+            design_status = design.get("request_status")
+            if design.get("order_id"):
+                design_status = f'Used in Order #{design["order_id"]}'
+            elif design_status:
+                design_status = str(design_status).replace("_", " ").title()
+            open_url = url_for("customer.download_file", file_id=design.get("file_id"))
+            status_html = f'<span class="badge badge-neutral">{e(design_status)}</span>' if design_status else ""
+            design_cards.append(
+                f'''<div class="card"><div class="card__body" style="padding:var(--space-4);">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3);">
+                    <strong style="overflow-wrap:anywhere;">{e(design.get("filename"))}</strong>{status_html}
+                  </div>
+                  <p class="text-muted text-sm" style="margin:var(--space-2) 0;">Uploaded {e(format_date(design.get("uploaded_at")))}</p>
+                  <a class="text-link" href="{open_url}">Open</a>
+                </div></div>'''
+            )
+        recent_designs_html = f'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:var(--space-3);">{"".join(design_cards)}</div>'
+    else:
+        recent_designs_html = f'''<div class="empty-state" style="padding:var(--space-8) var(--space-4);">
+          <h3 class="empty-state__title">No designs yet</h3>
+          <p class="empty-state__desc">Upload your first design to get started.</p>
+          <a class="btn btn-primary" href="{upload_url}">Upload Design</a>
+        </div>'''
 
     content = f"""<div class="main-content__header">
   <h1 class="main-content__title">Customer Dashboard</h1>
   <p class="main-content__subtitle">Welcome back, {user_name}.</p>
 </div>
 
-<div class="grid-3">
-  <div class="card">
-    <div class="card__body" style="text-align:center;padding:var(--space-8) var(--space-6);">
-      <div style="font-size:var(--font-size-h3);font-weight:var(--font-weight-bold);">{e(order_count)}</div>
-      <div class="text-muted text-sm">Total Orders</div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card__body" style="text-align:center;padding:var(--space-8) var(--space-6);">
-      <div style="font-size:var(--font-size-h3);font-weight:var(--font-weight-bold);">{e(draft_design_count)}</div>
-      <div class="text-muted text-sm">Draft Designs</div>
-      <a href="{saved_designs_url}" class="text-link" style="margin-top:var(--space-3);display:inline-block;">View saved designs</a>
-    </div>
-  </div>
-</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--space-4);">{stats_html}</div>
 
 <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-6);">
   <a class="btn btn-primary" href="{upload_url}">Upload Design</a>
   <a class="btn btn-secondary" href="{saved_designs_url}">Saved Designs</a>
   <a class="btn btn-secondary" href="{orders_url}">View My Orders</a>
-</div>"""
+  <a class="btn btn-secondary" href="{track_url}">Track Production</a>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:var(--space-5);margin-top:var(--space-6);align-items:start;">
+  <section class="card" aria-labelledby="recent-orders-title">
+    <div class="card__header"><span class="card__title" id="recent-orders-title">Recent Orders</span><a class="text-link" href="{orders_url}">View all â†’</a></div>
+    <div class="card__body" style="padding:var(--space-4);">{recent_orders_html}</div>
+  </section>
+  <section class="card" aria-labelledby="production-status-title">
+    <div class="card__header"><span class="card__title" id="production-status-title">Production Status</span></div>
+    <div class="card__body" style="padding:var(--space-4);">
+      {production_html}
+      <a class="text-link" href="{track_url}">View production details â†’</a>
+    </div>
+  </section>
+</div>
+
+<section class="card" aria-labelledby="recent-designs-title" style="margin-top:var(--space-6);">
+  <div class="card__header"><span class="card__title" id="recent-designs-title">Recent Designs</span><a class="text-link" href="{saved_designs_url}">View all â†’</a></div>
+  <div class="card__body" style="padding:var(--space-4);">{recent_designs_html}</div>
+</section>"""
 
     return portal_page(
         portal="customer",
@@ -482,7 +602,7 @@ def track_production_page(orders, current_user=None, **kwargs):
         for order in orders:
             order_id = order.get("order_id")
             status = order.get("status") or ""
-            status_label = "Awaiting Production" if status in ("Request Submitted", "Manufacturer Selected") else status
+            status_label = production_status_label(status)
             expected = order.get("expected_completion")
             expected_html = f'<p><strong>Expected completion:</strong> {e(format_date(expected))}</p>' if expected else ""
             history = order.get("history") or []

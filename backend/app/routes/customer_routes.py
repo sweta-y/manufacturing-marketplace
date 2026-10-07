@@ -72,17 +72,28 @@ def _owned_request(request_id, cp_id):
 def dashboard():
     cp_id = get_customer_profile_id()
     order_count = 0
+    active_order_count = 0
+    in_production_count = 0
     draft_design_count = 0
+    recent_orders = []
+    recent_designs = []
+    production_orders = []
     if cp_id:
         row = db.session.execute(
             db.text(
-                """SELECT COUNT(*) FROM orders o
+                """SELECT COUNT(*) AS total_orders,
+                          COUNT(*) FILTER (WHERE o.status NOT IN ('Completed', 'Cancelled')) AS active_orders,
+                          COUNT(*) FILTER (WHERE o.status IN ('Manufacturing', 'Quality Check')) AS in_production
+                   FROM orders o
                    JOIN manufacturing_requests r ON r.request_id = o.request_id
                    WHERE r.customer_profile_id = :cp"""
             ),
             {"cp": cp_id},
-        ).first()
-        order_count = row[0] if row else 0
+        ).mappings().first()
+        if row:
+            order_count = row["total_orders"] or 0
+            active_order_count = row["active_orders"] or 0
+            in_production_count = row["in_production"] or 0
 
         draft_row = db.session.execute(
             db.text(
@@ -99,10 +110,95 @@ def dashboard():
         ).first()
         draft_design_count = draft_row[0] if draft_row else 0
 
+        recent_orders = [dict(row) for row in db.session.execute(
+            db.text(
+                """SELECT o.order_id, o.status, o.created_at,
+                          uf.filename, p.name AS process_name
+                   FROM orders o
+                   JOIN manufacturing_requests r ON r.request_id = o.request_id
+                   LEFT JOIN uploaded_files uf ON uf.file_id = r.file_id
+                   LEFT JOIN manufacturing_processes p ON p.process_id = r.process_id
+                   WHERE r.customer_profile_id = :cp
+                   ORDER BY o.created_at DESC, o.order_id DESC
+                   LIMIT 5"""
+            ),
+            {"cp": cp_id},
+        ).mappings().all()]
+
+        recent_designs = [dict(row) for row in db.session.execute(
+            db.text(
+                """SELECT uf.file_id, uf.filename, uf.uploaded_at,
+                          (SELECT r.status
+                           FROM manufacturing_requests r
+                           WHERE r.file_id = uf.file_id
+                           ORDER BY r.created_at DESC, r.request_id DESC
+                           LIMIT 1) AS request_status,
+                          (SELECT o.order_id
+                           FROM orders o
+                           JOIN manufacturing_requests r ON r.request_id = o.request_id
+                           WHERE r.file_id = uf.file_id
+                           ORDER BY o.created_at DESC, o.order_id DESC
+                           LIMIT 1) AS order_id
+                   FROM uploaded_files uf
+                   WHERE uf.user_id = :uid
+                   ORDER BY uf.uploaded_at DESC, uf.file_id DESC
+                   LIMIT 4"""
+            ),
+            {"uid": session["user_id"]},
+        ).mappings().all()]
+
+        production_orders = _customer_active_production_orders(cp_id)
+
     return dashboard_page(
         order_count=order_count,
+        active_order_count=active_order_count,
         draft_design_count=draft_design_count,
+        in_production_count=in_production_count,
+        recent_orders=recent_orders,
+        production_orders=production_orders,
+        recent_designs=recent_designs,
     )
+
+
+def _customer_active_production_orders(cp_id):
+    rows = db.session.execute(
+        db.text(
+            """SELECT o.order_id, o.status, o.created_at,
+               r.quantity, r.estimated_days, p.name AS process_name,
+               mt.name AS material_name, uf.filename
+               FROM orders o
+               JOIN manufacturing_requests r ON r.request_id = o.request_id
+               LEFT JOIN uploaded_files uf ON uf.file_id = r.file_id
+               LEFT JOIN manufacturing_processes p ON p.process_id = r.process_id
+               LEFT JOIN materials mt ON mt.material_id = r.material_id
+               WHERE r.customer_profile_id = :cp
+                 AND o.status NOT IN ('Completed', 'Cancelled')
+               ORDER BY o.created_at DESC"""
+        ),
+        {"cp": cp_id},
+    ).mappings().all()
+
+    production_orders = []
+    for row in rows:
+        item = dict(row)
+        history = db.session.execute(
+            db.text(
+                """SELECT status, changed_at, remarks
+                   FROM order_status_history
+                   WHERE order_id = :oid
+                   ORDER BY changed_at ASC, history_id ASC"""
+            ),
+            {"oid": item["order_id"]},
+        ).mappings().all()
+        item["history"] = [dict(entry) for entry in history]
+        estimated_days = item.get("estimated_days")
+        created_at = item.get("created_at")
+        item["expected_completion"] = (
+            created_at + timedelta(days=int(estimated_days))
+            if created_at and estimated_days is not None else None
+        )
+        production_orders.append(item)
+    return production_orders
 
 
 @customer_bp.route("/upload", methods=["GET", "POST"])
@@ -431,45 +527,7 @@ def orders():
 @role_required("customer")
 def track_production():
     cp_id = get_customer_profile_id()
-    rows = db.session.execute(
-        db.text(
-            """SELECT o.order_id, o.status, o.created_at,
-               r.quantity, r.estimated_days, p.name AS process_name,
-               mt.name AS material_name, uf.filename
-               FROM orders o
-               JOIN manufacturing_requests r ON r.request_id = o.request_id
-               LEFT JOIN uploaded_files uf ON uf.file_id = r.file_id
-               LEFT JOIN manufacturing_processes p ON p.process_id = r.process_id
-               LEFT JOIN materials mt ON mt.material_id = r.material_id
-               WHERE r.customer_profile_id = :cp
-                 AND o.status NOT IN ('Completed', 'Cancelled')
-               ORDER BY o.created_at DESC"""
-        ),
-        {"cp": cp_id},
-    ).mappings().all()
-
-    production_orders = []
-    for row in rows:
-        item = dict(row)
-        history = db.session.execute(
-            db.text(
-                """SELECT status, changed_at, remarks
-                   FROM order_status_history
-                   WHERE order_id = :oid
-                   ORDER BY changed_at ASC, history_id ASC"""
-            ),
-            {"oid": item["order_id"]},
-        ).mappings().all()
-        item["history"] = [dict(entry) for entry in history]
-        estimated_days = item.get("estimated_days")
-        created_at = item.get("created_at")
-        item["expected_completion"] = (
-            created_at + timedelta(days=int(estimated_days))
-            if created_at and estimated_days is not None else None
-        )
-        production_orders.append(item)
-
-    return track_production_page(orders=production_orders)
+    return track_production_page(orders=_customer_active_production_orders(cp_id))
 
 
 @customer_bp.route("/notifications")
