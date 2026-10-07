@@ -3,7 +3,7 @@ from flask import current_app
 from supabase import create_client
 from werkzeug.utils import secure_filename
 
-ALLOWED_EXTENSIONS = {"stl", "step", "stp", "obj"}
+ALLOWED_EXTENSIONS = {"stl", "step", "stp", "obj", "3mf", "ply", "iges", "igs", "fbx", "glb", "gltf", "3ds", "wrl", "x3d", "dxf", "dwg", "jpg", "jpeg", "png", "webp", "gif", "bmp", "tiff", "svg", "pdf", "doc", "docx", "txt", "csv", "xls", "xlsx", "zip", "rar", "7z"}
 MAX_SIZE_MB = 50
 BUCKET_NAME = "design-files"
 
@@ -21,7 +21,7 @@ def _storage_bucket():
 def save_upload(file_storage, user_id, base_dir=None):
     filename = secure_filename(file_storage.filename)
     if not filename or not allowed_file(filename):
-        raise ValueError("Invalid file type. Allowed: STL, STEP, STP, OBJ")
+        raise ValueError("Invalid file type. Common 3D/CAD, image, document, and archive formats are supported.")
     ext = filename.rsplit(".", 1)[1].lower()
     unique_name = f"{uuid.uuid4().hex}_{filename}"
     object_path = f"uploads/{user_id}/{unique_name}"

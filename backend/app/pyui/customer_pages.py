@@ -221,9 +221,9 @@ def upload_step1_page(current_user=None, step=1, **kwargs):
   <div class="card__body">
     <form method="POST" action="{upload_action}" enctype="multipart/form-data">
       <div class="form-group">
-        <label class="form-label" for="file">3D Design File</label>
-        <input class="form-input" type="file" id="file" name="file" accept=".stl,.step,.stp,.obj" required />
-        <p class="form-hint">Supports .STL, .STEP, .STP, .OBJ — max 50 MB</p>
+        <label class="form-label" for="file">Design / Project File</label>
+        <input class="form-input" type="file" id="file" name="file" accept=".stl,.step,.stp,.obj,.3mf,.ply,.iges,.igs,.fbx,.glb,.gltf,.3ds,.wrl,.x3d,.dxf,.dwg,.jpg,.jpeg,.png,.webp,.gif,.bmp,.tiff,.svg,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.zip,.rar,.7z" required />
+        <p class="form-hint">Supports common 3D/CAD, image, document, and archive formats — max 50 MB</p>
       </div>
       <button class="btn btn-primary" type="submit">Upload and Continue</button>
     </form>
