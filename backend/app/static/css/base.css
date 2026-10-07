@@ -337,10 +337,6 @@ small { font-size: var(--font-size-xs); }
   gap: var(--space-3);
 }
 
-.sidebar__nav[aria-label="Customer menu"] > .sidebar__section:first-child {
-  margin-block: auto;
-}
-
 .sidebar__user--profile-link {
   color: inherit;
   text-decoration: none;

@@ -72,10 +72,10 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
 
     nav_links = []
     if portal == "customer":
-        nav_links.append(sidebar_link(url_for("customer.dashboard"), "Dashboard", active_nav == "dashboard"))
-        nav_links.append(sidebar_link(url_for("customer.upload_design"), "Upload Design", active_nav == "upload"))
-        nav_links.append(sidebar_link(url_for("customer.saved_designs"), "Saved Designs", active_nav == "saved_designs"))
-        nav_links.append(sidebar_link(url_for("customer.orders"), "My Orders", active_nav == "orders"))
+        nav_links.append(sidebar_link(url_for("customer.dashboard"), "Dashboard", active_nav == "dashboard", icon="dashboard"))
+        nav_links.append(sidebar_link(url_for("customer.upload_design"), "Upload Design", active_nav == "upload", icon="upload"))
+        nav_links.append(sidebar_link(url_for("customer.saved_designs"), "Saved Designs", active_nav == "saved_designs", icon="saved"))
+        nav_links.append(sidebar_link(url_for("customer.orders"), "My Orders", active_nav == "orders", icon="orders"))
     elif portal == "manufacturer":
         nav_links.append(sidebar_link(url_for("manufacturer.dashboard"), "Dashboard", active_nav == "dashboard"))
         nav_links.append(sidebar_link(url_for("manufacturer.machines"), "Machines", active_nav == "machines"))
@@ -108,6 +108,7 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
         avatar_letter = "?"
         user_name = "User"
 
+    avatar_content = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>' if portal == "customer" else avatar_letter
     user_role_display = e(portal.capitalize())
     user_container = "a" if portal == "customer" else "div"
     if portal == "customer":
@@ -149,7 +150,7 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
 
     <{user_container} {user_container_attrs}>
       <div class="sidebar__user-avatar" aria-hidden="true">
-        {avatar_letter}
+        {avatar_content}
       </div>
       <div class="sidebar__user-info">
         <div class="sidebar__user-name">{user_name}</div>
