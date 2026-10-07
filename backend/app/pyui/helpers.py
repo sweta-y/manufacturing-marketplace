@@ -90,6 +90,9 @@ SIDEBAR_ICONS = {
     "upload": '<path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M20 16.5a4.5 4.5 0 0 0-2-8.5h-1.2A6.5 6.5 0 1 0 4 15"/>',
     "saved": '<path d="M6 3.75h12v17l-6-4-6 4z"/>',
     "orders": '<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="m4.5 7.7 7.5 4.4 7.5-4.4M12 12.1V21"/>',
+    "track": '<path d="M4 19V5m0 14h16"/><path d="m7 15 4-4 3 2 5-6"/><circle cx="19" cy="7" r="1"/>',
+    "notifications": '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
+    "help": '<circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.2 1.8c-1 .9-1.8 1.2-1.8 2.7M12 17h.01"/>',
 }
 
 

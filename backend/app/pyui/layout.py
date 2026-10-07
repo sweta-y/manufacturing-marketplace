@@ -76,6 +76,8 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
         nav_links.append(sidebar_link(url_for("customer.upload_design"), "Upload Design", active_nav == "upload", icon="upload"))
         nav_links.append(sidebar_link(url_for("customer.saved_designs"), "Saved Designs", active_nav == "saved_designs", icon="saved"))
         nav_links.append(sidebar_link(url_for("customer.orders"), "My Orders", active_nav == "orders", icon="orders"))
+        nav_links.append(sidebar_link(url_for("customer.track_production"), "Track Production", active_nav == "track_production", icon="track"))
+        nav_links.append(sidebar_link(url_for("customer.notifications"), "Notifications", active_nav == "notifications", icon="notifications"))
     elif portal == "manufacturer":
         nav_links.append(sidebar_link(url_for("manufacturer.dashboard"), "Dashboard", active_nav == "dashboard"))
         nav_links.append(sidebar_link(url_for("manufacturer.machines"), "Machines", active_nav == "machines"))
@@ -91,6 +93,9 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
         nav_links.append(sidebar_link(url_for("admin.manufacturer_approvals"), "Manufacturer Approvals", active_nav == "manufacturer_approvals"))
 
     account_links = []
+    support_links = []
+    if portal == "customer":
+        support_links.append(sidebar_link(url_for("customer.help_support"), "Help & Support", active_nav == "help_support", icon="help"))
     if portal == "manufacturer":
         account_links.append(sidebar_link(url_for("manufacturer.profile"), "Profile", active_nav == "profile"))
 
@@ -99,6 +104,13 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
         account_section = f"""      <div class="sidebar__section">
         <span class="sidebar__section-label">Account</span>
         {"".join(account_links)}
+      </div>"""
+
+    support_section = ""
+    if support_links:
+        support_section = f"""      <div class="sidebar__section">
+        <span class="sidebar__section-label">Support</span>
+        {"".join(support_links)}
       </div>"""
 
     if current_user and current_user.full_name:
@@ -112,7 +124,8 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
     user_role_display = e(portal.capitalize())
     user_container = "a" if portal == "customer" else "div"
     if portal == "customer":
-        user_container_attrs = f'class="sidebar__user sidebar__user--profile-link" href="{url_for("customer.profile")}" aria-label="Open customer profile"'
+        profile_current = ' aria-current="page"' if active_nav == "profile" else ""
+        user_container_attrs = f'class="sidebar__user sidebar__user--profile-link" href="{url_for("customer.profile")}" aria-label="Open customer profile"{profile_current}'
     else:
         user_container_attrs = 'class="sidebar__user"'
 
@@ -145,6 +158,7 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
         <span class="sidebar__section-label">Main</span>
         {"".join(nav_links)}
       </div>
+{support_section}
 {account_section}
     </nav>
 

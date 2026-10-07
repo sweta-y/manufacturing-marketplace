@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from flask import Blueprint, request, redirect, url_for, session, flash
 from app.extensions import db
 from app.utils.auth_decorators import role_required
@@ -18,6 +19,9 @@ from app.pyui.customer_pages import (
     orders_page,
     order_detail_page,
     profile_page,
+    track_production_page,
+    notifications_page,
+    help_support_page,
 )
 
 customer_bp = Blueprint("customer", __name__, url_prefix="/customer")
@@ -421,6 +425,72 @@ def orders():
     return orders_page(
         orders=[dict(r) for r in rows],
     )
+
+
+@customer_bp.route("/track-production")
+@role_required("customer")
+def track_production():
+    cp_id = get_customer_profile_id()
+    rows = db.session.execute(
+        db.text(
+            """SELECT o.order_id, o.status, o.created_at,
+               r.quantity, r.estimated_days, p.name AS process_name,
+               mt.name AS material_name, uf.filename
+               FROM orders o
+               JOIN manufacturing_requests r ON r.request_id = o.request_id
+               LEFT JOIN uploaded_files uf ON uf.file_id = r.file_id
+               LEFT JOIN manufacturing_processes p ON p.process_id = r.process_id
+               LEFT JOIN materials mt ON mt.material_id = r.material_id
+               WHERE r.customer_profile_id = :cp
+                 AND o.status NOT IN ('Completed', 'Cancelled')
+               ORDER BY o.created_at DESC"""
+        ),
+        {"cp": cp_id},
+    ).mappings().all()
+
+    production_orders = []
+    for row in rows:
+        item = dict(row)
+        history = db.session.execute(
+            db.text(
+                """SELECT status, changed_at, remarks
+                   FROM order_status_history
+                   WHERE order_id = :oid
+                   ORDER BY changed_at ASC, history_id ASC"""
+            ),
+            {"oid": item["order_id"]},
+        ).mappings().all()
+        item["history"] = [dict(entry) for entry in history]
+        estimated_days = item.get("estimated_days")
+        created_at = item.get("created_at")
+        item["expected_completion"] = (
+            created_at + timedelta(days=int(estimated_days))
+            if created_at and estimated_days is not None else None
+        )
+        production_orders.append(item)
+
+    return track_production_page(orders=production_orders)
+
+
+@customer_bp.route("/notifications")
+@role_required("customer")
+def notifications():
+    rows = db.session.execute(
+        db.text(
+            """SELECT notification_id, message, created_at, is_read
+               FROM notifications
+               WHERE user_id = :uid
+               ORDER BY created_at DESC, notification_id DESC"""
+        ),
+        {"uid": session["user_id"]},
+    ).mappings().all()
+    return notifications_page(notifications=[dict(row) for row in rows])
+
+
+@customer_bp.route("/help-support")
+@role_required("customer")
+def help_support():
+    return help_support_page()
 
 
 @customer_bp.route("/orders/<int:order_id>")

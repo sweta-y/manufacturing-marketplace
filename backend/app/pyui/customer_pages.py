@@ -476,6 +476,125 @@ def orders_page(orders, current_user=None, **kwargs):
     )
 
 
+def track_production_page(orders, current_user=None, **kwargs):
+    if orders:
+        cards = []
+        for order in orders:
+            order_id = order.get("order_id")
+            status = order.get("status") or ""
+            status_label = "Awaiting Production" if status in ("Request Submitted", "Manufacturer Selected") else status
+            expected = order.get("expected_completion")
+            expected_html = f'<p><strong>Expected completion:</strong> {e(format_date(expected))}</p>' if expected else ""
+            history = order.get("history") or []
+            if history:
+                history_html = "".join(
+                    f'''<li style="padding:var(--space-2) 0;border-bottom:1px solid var(--color-border);">
+                      <strong>{e(event.get("status"))}</strong>
+                      <span class="text-muted text-sm">{e(format_datetime(event.get("changed_at")))}</span>
+                      {f'<p class="text-muted text-sm">{e(event.get("remarks"))}</p>' if event.get("remarks") else ""}
+                    </li>'''
+                    for event in history
+                )
+                timeline = f'<ol aria-label="Order status timeline" style="list-style:none;padding:0;margin:var(--space-3) 0 0;">{history_html}</ol>'
+            else:
+                timeline = '<p class="text-muted text-sm">No status history recorded yet.</p>'
+            cards.append(
+                f'''<div class="card" style="margin-bottom:var(--space-4);">
+                  <div class="card__header"><span class="card__title">Order #{e(order_id)}</span>{order_status_badge(status_label)}</div>
+                  <div class="card__body">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--space-3);">
+                      <p><strong>Design / part:</strong> {e(order.get("filename") or "—")}</p>
+                      <p><strong>Process:</strong> {e(order.get("process_name") or "—")}</p>
+                      <p><strong>Material:</strong> {e(order.get("material_name") or "—")}</p>
+                      <p><strong>Quantity:</strong> {e(order.get("quantity") or "—")}</p>
+                      <p><strong>Order date:</strong> {e(format_date(order.get("created_at")))}</p>
+                      {expected_html}
+                    </div>
+                    <h2 style="font-size:var(--font-size-md);margin-top:var(--space-4);">Status timeline</h2>
+                    {timeline}
+                  </div>
+                </div>'''
+            )
+        content_body = "".join(cards)
+    else:
+        content_body = '''<div class="empty-state">
+          <h2 class="empty-state__title">No active production</h2>
+          <p class="empty-state__desc">Your active manufacturing orders will appear here.</p>
+        </div>'''
+
+    content = f'''<div class="main-content__header">
+      <h1 class="main-content__title">Track Production</h1>
+      <p class="main-content__subtitle">Follow the latest recorded status of your active orders.</p>
+    </div>
+    {content_body}'''
+    return portal_page(
+        portal="customer", page_title="Track Production", active_nav="track_production",
+        content=content, current_user=current_user, title="Track Production | 3D Marketplace",
+    )
+
+
+def notifications_page(notifications, current_user=None, **kwargs):
+    if notifications:
+        items = []
+        for notification in notifications:
+            read_state = "Read" if notification.get("is_read") else "Unread"
+            state_class = "badge-neutral" if notification.get("is_read") else "badge-info"
+            items.append(
+                f'''<div class="card" style="margin-bottom:var(--space-3);">
+                  <div class="card__body" style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3);">
+                    <div><p>{e(notification.get("message"))}</p>
+                    <span class="text-muted text-sm">{e(format_datetime(notification.get("created_at")))}</span></div>
+                    <span class="badge {state_class}">{read_state}</span>
+                  </div>
+                </div>'''
+            )
+        content_body = "".join(items)
+    else:
+        content_body = '''<div class="empty-state">
+          <h2 class="empty-state__title">No notifications yet</h2>
+        </div>'''
+
+    content = f'''<div class="main-content__header">
+      <h1 class="main-content__title">Notifications</h1>
+      <p class="main-content__subtitle">Order and account updates for your marketplace activity.</p>
+    </div>
+    {content_body}'''
+    return portal_page(
+        portal="customer", page_title="Notifications", active_nav="notifications",
+        content=content, current_user=current_user, title="Notifications | 3D Marketplace",
+    )
+
+
+def help_support_page(current_user=None, **kwargs):
+    upload_url = url_for("customer.upload_design")
+    saved_url = url_for("customer.saved_designs")
+    track_url = url_for("customer.track_production")
+    orders_url = url_for("customer.orders")
+    content = f'''<div class="main-content__header">
+      <h1 class="main-content__title">Help &amp; Support</h1>
+      <p class="main-content__subtitle">Quick guidance for using the manufacturing marketplace.</p>
+    </div>
+    <div class="card"><div class="card__body">
+      <h2>How do I upload a design?</h2>
+      <p>Choose a 3D design file in STL, STEP, STP, or OBJ format (up to 50 MB), then select a process, material, and quantity.</p>
+      <p><a class="text-link" href="{upload_url}">Upload Design</a></p>
+      <h2>How does manufacturing work?</h2>
+      <p>After configuring a request, review available manufacturer matches and submit an order. The order status is updated as it moves through the marketplace workflow.</p>
+      <h2>How can I track an order?</h2>
+      <p>Use Track Production for active orders or My Orders to review all orders and their recorded status history.</p>
+      <p><a class="text-link" href="{track_url}">Track Production</a> · <a class="text-link" href="{orders_url}">My Orders</a></p>
+      <h2>Where are my uploaded designs?</h2>
+      <p>Saved Designs lists your uploaded files and whether they are still drafts, submitted, or associated with an order.</p>
+      <p><a class="text-link" href="{saved_url}">View Saved Designs</a></p>
+      <h2>What do order statuses mean?</h2>
+      <p>Supported statuses are Request Submitted, Manufacturer Selected, Accepted, Manufacturing, Quality Check, Completed, and Cancelled. Updates and timestamps appear in the order status history when recorded.</p>
+    </div></div>'''
+    return portal_page(
+        portal="customer", page_title="Help & Support", active_nav="help_support",
+        content=content, current_user=current_user, title="Help & Support | 3D Marketplace",
+    )
+
+
 def order_detail_page(order, history, current_user=None, **kwargs):
     order_id = order.get("order_id") if hasattr(order, "get") else getattr(order, "order_id", "")
     status_badge = order_status_badge(order.get("status") if hasattr(order, "get") else getattr(order, "status", ""))
