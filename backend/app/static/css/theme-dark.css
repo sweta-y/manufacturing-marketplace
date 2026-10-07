@@ -131,3 +131,30 @@ html[data-theme="dark"] .theme-toggle {
   color: #e6edf7 !important;
   border-color: #243049 !important;
 }
+
+/* Top bar - navy in both themes */
+.topbar,
+html[data-theme="dark"] .topbar {
+  background-color: var(--color-primary) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.topbar .topbar__page-title,
+html[data-theme="dark"] .topbar .topbar__page-title {
+  color: #ffffff !important;
+}
+
+.topbar .badge,
+html[data-theme="dark"] .topbar .badge {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+.topbar .theme-toggle,
+.topbar .btn-secondary,
+html[data-theme="dark"] .topbar .theme-toggle,
+html[data-theme="dark"] .topbar .btn-secondary {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
