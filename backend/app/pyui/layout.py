@@ -3,11 +3,18 @@ from app.models.user import User
 from app.pyui.helpers import e, flash_messages, role_badge_class, sidebar_link
 
 
+def theme_toggle(fixed=False):
+    placement = ' style="position:fixed;top:12px;right:12px;z-index:9999;"' if fixed else ""
+    return f'<button class="btn btn-secondary btn-sm theme-toggle" type="button" aria-label="Toggle theme"{placement}><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg></button>'
+
+
 def base_layout(title, body_content=None, body=None):
     content = body_content if body_content is not None else (body if body is not None else "")
     tokens_css = url_for("static", filename="css/tokens.css")
     base_css = url_for("static", filename="css/base.css")
     components_css = url_for("static", filename="css/components.css")
+    theme_css = url_for("static", filename="css/theme-dark.css")
+    has_topbar = 'class="app-shell"' in content
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,9 +26,31 @@ def base_layout(title, body_content=None, body=None):
   <link rel="stylesheet" href="{tokens_css}" />
   <link rel="stylesheet" href="{base_css}" />
   <link rel="stylesheet" href="{components_css}" />
+  <link rel="stylesheet" href="{theme_css}" />
+  <script>try{{if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}}catch(e){{}}</script>
 </head>
 <body>
-{content}
+{content if has_topbar else content + theme_toggle(fixed=True)}
+  <script>
+    document.querySelectorAll(".theme-toggle").forEach(function(button){{
+      function updateTheme(theme){{
+        document.documentElement.toggleAttribute("data-theme", theme === "dark");
+        if(theme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+        button.innerHTML = theme === "dark"
+          ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>'
+          : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6.5 6.5 0 0 0 8.268 8.268c.344-.215.825-.003.803.401z"/></svg>';
+      }}
+      var currentTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      updateTheme(currentTheme);
+      button.addEventListener("click", function(){{
+        currentTheme = currentTheme === "dark" ? "light" : "dark";
+        if(currentTheme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+        else document.documentElement.removeAttribute("data-theme");
+        try{{localStorage.setItem("theme", currentTheme);}}catch(e){{}}
+        updateTheme(currentTheme);
+      }});
+    }});
+  </script>
 </body>
 </html>
 """
@@ -132,6 +161,7 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
     </div>
     <div class="topbar__right">
       {role_badge}
+      {theme_toggle()}
       <form method="POST" action="{logout_url}" style="display:inline;">
         <button class="btn btn-secondary btn-sm" type="submit">Logout</button>
       </form>

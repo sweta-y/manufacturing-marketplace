@@ -1,0 +1,133 @@
+html[data-theme="dark"] {
+  --color-bg: #0b1220;
+  --color-surface: #111a2b;
+  --color-surface-muted: #172238;
+  --color-border: #243049;
+  --color-border-light: #243049;
+  --color-text-primary: #e6edf7;
+  --color-text-secondary: #9aa8bf;
+  --color-text-tertiary: #9aa8bf;
+  --color-primary-subtle: #1b2a42;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] .app-shell,
+html[data-theme="dark"] .main-content {
+  background-color: #0b1220 !important;
+  color: #e6edf7 !important;
+}
+
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .auth-card,
+html[data-theme="dark"] .modal,
+html[data-theme="dark"] .table-wrapper,
+html[data-theme="dark"] .table,
+html[data-theme="dark"] .choice-card,
+html[data-theme="dark"] .form-input,
+html[data-theme="dark"] .form-select,
+html[data-theme="dark"] .form-textarea,
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background-color: #111a2b !important;
+  color: #e6edf7 !important;
+  border-color: #243049 !important;
+}
+
+html[data-theme="dark"] .card--flat,
+html[data-theme="dark"] .card__footer,
+html[data-theme="dark"] .modal__footer,
+html[data-theme="dark"] .table thead,
+html[data-theme="dark"] .table tbody tr:hover,
+html[data-theme="dark"] .dropzone,
+html[data-theme="dark"] .pill-toggle-group,
+html[data-theme="dark"] .stepper-input {
+  background-color: #172238 !important;
+}
+
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6,
+html[data-theme="dark"] p,
+html[data-theme="dark"] label,
+html[data-theme="dark"] td,
+html[data-theme="dark"] .card__title,
+html[data-theme="dark"] .modal__title,
+html[data-theme="dark"] .auth-card__header h1,
+html[data-theme="dark"] .auth-page--login .form-label,
+html[data-theme="dark"] .topbar__page-title,
+html[data-theme="dark"] .text-muted,
+html[data-theme="dark"] .text-tertiary {
+  color: #e6edf7 !important;
+}
+
+html[data-theme="dark"] .form-label-section,
+html[data-theme="dark"] .table th,
+html[data-theme="dark"] .form-hint,
+html[data-theme="dark"] .auth-card__links,
+html[data-theme="dark"] .topbar__right,
+html[data-theme="dark"] .empty-state__desc {
+  color: #9aa8bf !important;
+}
+
+html[data-theme="dark"] .table td,
+html[data-theme="dark"] .table th,
+html[data-theme="dark"] .table-wrapper,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .modal,
+html[data-theme="dark"] .form-input,
+html[data-theme="dark"] .form-select,
+html[data-theme="dark"] .form-textarea {
+  border-color: #243049 !important;
+}
+
+html[data-theme="dark"] .btn-secondary,
+html[data-theme="dark"] .btn-ghost,
+html[data-theme="dark"] .pill-toggle,
+html[data-theme="dark"] .stepper-input__btn,
+html[data-theme="dark"] .modal__close {
+  color: #e6edf7 !important;
+  border-color: #243049 !important;
+}
+
+html[data-theme="dark"] .btn-secondary:hover,
+html[data-theme="dark"] .btn-ghost:hover,
+html[data-theme="dark"] .pill-toggle:hover,
+html[data-theme="dark"] .stepper-input__btn:hover {
+  background-color: #243049 !important;
+}
+
+html[data-theme="dark"] .auth-page__form-wrap {
+  background: #0b1220 !important;
+  color: #e6edf7 !important;
+}
+
+html[data-theme="dark"] .auth-page--login .auth-page__form-wrap {
+  background: #0b1220 !important;
+}
+
+html[data-theme="dark"] .auth-page--login .auth-card__header h1,
+html[data-theme="dark"] .auth-page--login .form-label {
+  color: #e6edf7 !important;
+}
+
+html[data-theme="dark"] .badge-neutral {
+  background-color: #243049 !important;
+  color: #e6edf7 !important;
+}
+
+html[data-theme="dark"] .alert-success { background-color: #123321 !important; color: #86efac !important; }
+html[data-theme="dark"] .alert-warning { background-color: #3a2c12 !important; color: #fcd34d !important; }
+html[data-theme="dark"] .alert-danger { background-color: #3b1c25 !important; color: #fda4af !important; }
+html[data-theme="dark"] .alert-info { background-color: #142f45 !important; color: #7dd3fc !important; }
+
+html[data-theme="dark"] .theme-toggle {
+  background-color: #172238 !important;
+  color: #e6edf7 !important;
+  border-color: #243049 !important;
+}
