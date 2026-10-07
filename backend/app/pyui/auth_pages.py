@@ -7,7 +7,21 @@ from app.pyui.helpers import e, flash_messages
 from app.pyui.layout import base_layout
 
 
-def _auth_visual(eyebrow, heading):
+def _auth_visual(eyebrow, heading, features=None):
+    feature_items = ""
+    if features:
+        feature_items = "".join(
+            f"""<span class="auth-page__grid-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            {icon}
+          </svg>
+          <small>{e(label)}</small>
+        </span>"""
+            for label, icon in features
+        )
+    else:
+        feature_items = "<span></span>" * 12
+
     return f"""  <div class="auth-page__visual" aria-hidden="true">
     <div class="auth-page__panel">
       <div class="auth-page__brand">
@@ -25,9 +39,7 @@ def _auth_visual(eyebrow, heading):
         <h2>{e(heading)}</h2>
       </div>
       <div class="auth-page__grid" aria-hidden="true">
-        <span></span><span></span><span></span><span></span>
-        <span></span><span></span><span></span><span></span>
-        <span></span><span></span><span></span><span></span>
+        {feature_items}
       </div>
     </div>
   </div>"""
@@ -41,8 +53,22 @@ def login_page(next_url=None, email="", **kwargs):
 
     next_input = f'<input type="hidden" name="next" value="{e(next_url)}" />' if next_url else ""
 
-    visual = _auth_visual("Production network", "Precision manufacturing supply chain.")
-    body = f"""<div class="auth-page">
+    features = [
+        ("3D Printing", '<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4.3 7.7 7.7 4.4 7.7-4.4M12 12.1V21"/>'),
+        ("CNC Machining", '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2M12 4V2M12 22v-2"/>'),
+        ("Injection Molding", '<path d="M7 4h10v16H7z"/><path d="M4 8h3M17 8h3M4 16h3M17 16h3M10 8h4v8h-4z"/>'),
+        ("Sheet Metal", '<path d="M4 6h16v12H4z"/><path d="m4 6 4 4h12M8 10v8"/>'),
+        ("Laser Cutting", '<path d="m13 3-2 7h5l-5 11 2-8H8l5-10Z"/>'),
+        ("Metal Casting", '<path d="M5 5h14v14H5z"/><path d="M8 9h8M8 13h5M8 17h8"/>'),
+        ("Rapid Prototyping", '<path d="M12 3v5M12 16v5M3 12h5M16 12h5"/><circle cx="12" cy="12" r="4"/>'),
+        ("Surface Finishing", '<path d="m4 17 6-6 4 4 6-6"/><path d="m17 5 3 4-4 1M4 21h16"/>'),
+        ("Quality Inspection", '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M8 11l2 2 4-4"/>'),
+        ("Verified Suppliers", '<path d="M5 6h14v13H5z"/><path d="M8 6V4h8v2M8 11l2 2 5-5"/>'),
+        ("Instant Quotes", '<path d="M12 3v18M16 7.5c-.7-1-2-1.5-4-1.5-2.2 0-4 1.1-4 3s1.8 3 4 3 4 1.1 4 3-1.8 3-4 3c-2 0-3.3-.5-4-1.5"/>'),
+        ("Order Tracking", '<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>'),
+    ]
+    visual = _auth_visual("Production network", "Precision manufacturing supply chain.", features)
+    body = f"""<div class="auth-page auth-page--login">
 {visual}
 
   <div class="auth-page__form-wrap">

@@ -518,12 +518,106 @@
   margin-top: 2rem;
 }
 
-.auth-page__grid span {
+.auth-page__grid > span {
   display: block;
   height: 90px;
   border-radius: 1rem;
   background: linear-gradient(180deg, rgba(245, 158, 11, 0.15), rgba(148, 163, 184, 0.08));
   border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.auth-page--login .auth-page__grid-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  color: #f8fafc;
+  overflow: hidden;
+  transition: border-color var(--duration-base), transform var(--duration-base);
+}
+
+.auth-page--login .auth-page__grid-item:hover {
+  border-color: #fbbf24;
+  transform: translateY(-2px);
+}
+
+.auth-page--login .auth-page__grid-item svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  color: #fbbf24;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.auth-page--login .auth-page__grid-item small {
+  max-width: 100%;
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Login-only contrast adjustments */
+.auth-page--login {
+  color: #f8fafc;
+}
+
+.auth-page--login .auth-page__panel {
+  color: #f8fafc;
+}
+
+.auth-page--login .auth-page__spec h2 {
+  color: #ffffff;
+}
+
+.auth-page--login .auth-page__panel p {
+  color: #cbd5e1;
+}
+
+.auth-page--login .auth-page__spec .eyebrow {
+  color: #fbbf24;
+}
+
+.auth-page--login .auth-page__grid > span {
+  background: linear-gradient(180deg, #22313d, #18252d);
+  border-color: rgba(203, 213, 225, 0.35);
+  color: #f8fafc;
+}
+
+.auth-page--login .auth-page__grid > span svg,
+.auth-page--login .auth-page__grid > span strong,
+.auth-page--login .auth-page__grid > span small {
+  color: #f8fafc;
+}
+
+.auth-page--login .auth-page__grid > span svg {
+  color: #fbbf24;
+  stroke: currentColor;
+  fill: none;
+}
+
+.auth-page--login .auth-page__form-wrap {
+  color: var(--color-text-primary);
+}
+
+.auth-page--login .auth-card__header h1,
+.auth-page--login .form-label {
+  color: #0d1117;
+}
+
+.auth-page--login .btn-primary {
+  background-color: #001e40;
+  border-color: #001e40;
+  color: #ffffff;
 }
 
 .auth-page__form-wrap {
