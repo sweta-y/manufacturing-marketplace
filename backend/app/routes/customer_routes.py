@@ -309,12 +309,28 @@ def upload_configure(request_id):
             url_for("customer.upload_configure", request_id=request_id, process_id=process_id)
         )
 
-    db.session.execute(
+    existing_order = db.session.execute(
+        db.text("SELECT 1 FROM orders WHERE request_id=:rid LIMIT 1"),
+        {"rid": request_id},
+    ).first()
+    if existing_order:
+        flash("This request already has an order and can no longer be changed.", "error")
+        return redirect(url_for("customer.orders"))
+
+    estimate = estimate_cost(process_id, material_id, quantity)
+    customer_price = (
+        estimate.get("estimated_cost")
+        if isinstance(estimate, dict) and not estimate.get("error")
+        else None
+    )
+    result = db.session.execute(
         db.text(
             """UPDATE manufacturing_requests SET
                process_id=:pid, material_id=:mid, quantity=:qty,
-               surface_finish=:sf, notes=:notes, status='submitted'
-               WHERE request_id=:rid"""
+               surface_finish=:sf, notes=:notes, estimated_cost=:estimated_cost,
+               status='submitted'
+               WHERE request_id=:rid
+                 AND NOT EXISTS (SELECT 1 FROM orders WHERE request_id=:rid)"""
         ),
         {
             "pid": process_id,
@@ -322,9 +338,13 @@ def upload_configure(request_id):
             "qty": quantity,
             "sf": surface_finish,
             "notes": notes,
+            "estimated_cost": str(customer_price) if customer_price is not None else None,
             "rid": request_id,
         },
     )
+    if result.rowcount == 0:
+        flash("This request already has an order and can no longer be changed.", "error")
+        return redirect(url_for("customer.orders"))
     db.session.commit()
 
     return redirect(url_for("customer.upload_matches", request_id=request_id))

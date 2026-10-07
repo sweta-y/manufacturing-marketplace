@@ -584,7 +584,8 @@ def active_orders_page(orders=None, current_user=None, **kwargs):
     )
 
 
-def advance_order_page(order_id, current_status, next_status, current_user=None, **kwargs):
+def advance_order_page(order_id, current_status, next_status, customer_price=None,
+                       maximum_price=None, current_user=None, **kwargs):
     curr_badge = order_status_badge(current_status)
     next_badge = order_status_badge(next_status)
     form_action = url_for("manufacturer.advance_order", order_id=order_id)
@@ -592,10 +593,15 @@ def advance_order_page(order_id, current_status, next_status, current_user=None,
 
     final_cost_html = ""
     if next_status == "Completed":
-        final_cost_html = """        <div class="form-group">
-          <label class="form-label" for="final_cost">Final Cost (₹)</label>
-          <input class="form-input" type="number" id="final_cost" name="final_cost" placeholder="e.g. 4500" min="0" step="0.01" />
+        if maximum_price is not None:
+            limit_text = f"Maximum allowed quote: {format_cost(maximum_price)} (75% of customer price {format_cost(customer_price)})."
+            final_cost_html = f"""        <div class="form-group">
+          <label class="form-label" for="final_cost">Manufacturer Quote (&#8377;)</label>
+          <input class="form-input" type="number" id="final_cost" name="final_cost" placeholder="e.g. 4500" min="0" max="{maximum_price:.2f}" step="0.01" aria-describedby="manufacturer-price-limit" required />
+          <p class="form-hint" id="manufacturer-price-limit">{e(limit_text)}</p>
         </div>"""
+        else:
+            final_cost_html = """        <p class="form-hint">A customer price is unavailable, so a manufacturer quote cannot be submitted.</p>"""
 
     content = f"""<div class="main-content__header">
   <h1 class="main-content__title">Update Order #{e(order_id)}</h1>

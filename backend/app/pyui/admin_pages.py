@@ -5,6 +5,7 @@ No Jinja2. All user/DB values escaped with e(). HTML structure preserved from te
 from flask import url_for, session
 from app.pyui.helpers import e, format_datetime, format_cost, flash_messages, order_status_badge
 from app.pyui.layout import portal_page
+from app.services.pricing_service import calculate_admin_profit
 
 
 from app.models.user import User
@@ -237,11 +238,14 @@ def user_detail_page(user=None, manufacturer_machines=None, manufacturer_orders=
         if manufacturer_orders:
             orows = ""
             for o in manufacturer_orders:
+                profit = calculate_admin_profit(o.get("customer_price"), o.get("manufacturer_price"))
                 orows += f"""<tr>
-            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">#{e(str(o.get("order_id","")))}
-            </td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">#{e(str(o.get("order_id","")))}</td>
             <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{e(o.get("customer_name",""))}</td>
             <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{e(o.get("status",""))}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_cost(o.get("customer_price"))}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_cost(o.get("manufacturer_price")) if o.get("manufacturer_price") is not None else "Not yet quoted"}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_cost(profit) if profit is not None else "Not yet available"}</td>
             <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_datetime(o.get("created_at"))}</td>
           </tr>"""
             machines_section += f"""<h2 style="margin-bottom:var(--space-3);font-size:var(--font-size-md);">Orders</h2>
@@ -253,6 +257,9 @@ def user_detail_page(user=None, manufacturer_machines=None, manufacturer_orders=
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Order</th>
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Customer</th>
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Status</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Customer Price</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Manufacturer Price</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Admin Profit</th>
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Created</th>
         </tr>
       </thead>
@@ -271,11 +278,14 @@ def user_detail_page(user=None, manufacturer_machines=None, manufacturer_orders=
         if customer_orders:
             corows = ""
             for o in customer_orders:
+                profit = calculate_admin_profit(o.get("customer_price"), o.get("manufacturer_price"))
                 corows += f"""<tr>
-            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">#{e(str(o.get("order_id","")))}
-            </td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">#{e(str(o.get("order_id","")))}</td>
             <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{e(o.get("manufacturer_name",""))}</td>
             <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{e(o.get("status",""))}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_cost(o.get("customer_price"))}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_cost(o.get("manufacturer_price")) if o.get("manufacturer_price") is not None else "Not yet quoted"}</td>
+            <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_cost(profit) if profit is not None else "Not yet available"}</td>
             <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_datetime(o.get("created_at"))}</td>
           </tr>"""
             customer_orders_section = f"""<h2 style="margin-bottom:var(--space-3);font-size:var(--font-size-md);">Orders</h2>
@@ -287,6 +297,9 @@ def user_detail_page(user=None, manufacturer_machines=None, manufacturer_orders=
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Order</th>
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Manufacturer</th>
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Status</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Customer Price</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Manufacturer Price</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Admin Profit</th>
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Created</th>
         </tr>
       </thead>
@@ -446,6 +459,9 @@ def orders_page(orders=None, statuses=None, status_filter="all",
           <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{e(o.get("customer_name",""))}</td>
           <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{mfr_name}</td>
           <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{e(o.get("status",""))}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_cost(o.get("customer_price"))}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_cost(o.get("manufacturer_price")) if o.get("manufacturer_price") is not None else "Not yet quoted"}</td>
+          <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_cost(calculate_admin_profit(o.get("customer_price"), o.get("manufacturer_price"))) if calculate_admin_profit(o.get("customer_price"), o.get("manufacturer_price")) is not None else "Not yet available"}</td>
           <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);">{format_datetime(o.get("created_at"))}</td>
           <td style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--color-border);text-align:right;"><a href="{detail_url}">Details</a></td>
         </tr>"""
@@ -458,6 +474,9 @@ def orders_page(orders=None, statuses=None, status_filter="all",
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Customer</th>
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Manufacturer</th>
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Status</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Customer Price</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Manufacturer Price</th>
+          <th style="text-align:left;padding:var(--space-3) var(--space-4);">Admin Profit</th>
           <th style="text-align:left;padding:var(--space-3) var(--space-4);">Created</th>
           <th style="text-align:right;padding:var(--space-3) var(--space-4);">View</th>
         </tr>
@@ -545,7 +564,9 @@ def order_detail_page(order=None, history=None, current_user=None, **kwargs):
     <p><strong>Quantity:</strong> {e(str(order.get("quantity","") or "—"))}</p>
     <p><strong>Surface Finish:</strong> {e(order.get("surface_finish","") or "—")}</p>
     <p><strong>Notes:</strong> {e(order.get("notes","") or "—")}</p>
-    <p><strong>Final Cost:</strong> {cost_str}</p>
+    <p><strong>Customer Price:</strong> {format_cost(order.get("customer_price")) if order.get("customer_price") is not None else "Not available"}</p>
+    <p><strong>Manufacturer Price:</strong> {cost_str}</p>
+    <p><strong>Admin Profit:</strong> {format_cost(calculate_admin_profit(order.get("customer_price"), final_cost)) if calculate_admin_profit(order.get("customer_price"), final_cost) is not None else "Not yet available"}</p>
     <p><strong>Created:</strong> {format_datetime(order.get("created_at"))}</p>
     <p><strong>Last Updated:</strong> {format_datetime(order.get("updated_at"))}</p>
   </div>

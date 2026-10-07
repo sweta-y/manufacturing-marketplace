@@ -114,8 +114,8 @@ def user_detail(user_id):
         manufacturer_orders = db.session.execute(
             db.text(
                 """
-                SELECT o.order_id, o.status, o.created_at,
-                       cu.full_name AS customer_name
+                SELECT o.order_id, o.status, o.created_at, mr.estimated_cost AS customer_price,
+                       o.final_cost AS manufacturer_price, cu.full_name AS customer_name
                 FROM orders o
                 JOIN manufacturing_requests mr ON mr.request_id = o.request_id
                 JOIN customer_profiles cp ON cp.customer_profile_id = mr.customer_profile_id
@@ -131,8 +131,8 @@ def user_detail(user_id):
         customer_orders = db.session.execute(
             db.text(
                 """
-                SELECT o.order_id, o.status, o.created_at,
-                       mp.business_name AS manufacturer_name
+                SELECT o.order_id, o.status, o.created_at, mr.estimated_cost AS customer_price,
+                       o.final_cost AS manufacturer_price, mp.business_name AS manufacturer_name
                 FROM orders o
                 JOIN manufacturing_requests mr ON mr.request_id = o.request_id
                 JOIN manufacturer_profiles mp ON mp.manufacturer_profile_id = o.manufacturer_profile_id
@@ -213,6 +213,8 @@ def orders():
 
     query = """
         SELECT o.order_id, o.status, o.created_at,
+               mr.estimated_cost AS customer_price,
+               o.final_cost AS manufacturer_price,
                cu.full_name AS customer_name,
                mu.full_name AS manufacturer_name,
                mp.business_name AS manufacturer_business_name
@@ -246,6 +248,7 @@ def order_detail(order_id):
         db.text(
             """
             SELECT o.order_id, o.status, o.created_at, o.updated_at, o.final_cost,
+                   r.estimated_cost AS customer_price,
                    mp.business_name, mp.manufacturer_profile_id,
                    r.quantity, r.surface_finish, r.notes,
                    p.name AS process_name, mt.name AS material_name,

@@ -15,6 +15,8 @@ from app.pyui.manufacturer_pages import (
     completed_orders_page,
 )
 from app.services.priority_service import order_requests_by_priority
+from app.services.pricing_service import manufacturer_price_limit, parse_price, valid_manufacturer_quote
+from app.pyui.helpers import format_cost
 
 manufacturer_bp = Blueprint("manufacturer", __name__, url_prefix="/manufacturer")
 
@@ -107,7 +109,13 @@ def _list_machines(mp_id):
 
 def _get_owned_order(order_id, mp_id):
     return db.session.execute(
-        db.text("SELECT order_id, status FROM orders WHERE order_id=:oid AND manufacturer_profile_id=:mp"),
+        db.text(
+            """SELECT o.order_id, o.status, r.estimated_cost AS customer_price,
+                      r.process_id, r.material_id, r.quantity
+               FROM orders o
+               JOIN manufacturing_requests r ON r.request_id = o.request_id
+               WHERE o.order_id=:oid AND o.manufacturer_profile_id=:mp"""
+        ),
         {"oid": order_id, "mp": mp_id},
     ).mappings().first()
 
@@ -584,21 +592,36 @@ def advance_order(order_id):
         flash(f"Cannot advance order in status '{order['status']}'.", "error")
         return redirect(url_for("manufacturer.active_orders"))
 
+    customer_price = order.get("customer_price") if next_status == "Completed" else None
+    maximum_price = manufacturer_price_limit(customer_price)
+
     if request.method == "GET":
         return advance_order_page(
             order_id=order_id,
             current_status=order["status"],
             next_status=next_status,
+            customer_price=customer_price,
+            maximum_price=maximum_price,
         )
 
     remarks = request.form.get("remarks", "").strip() or f"Status updated to {next_status}"
     fields = {"oid": order_id, "status": next_status}
     extra_set = ""
     if next_status == "Completed":
-        final_cost = request.form.get("final_cost")
-        if final_cost:
-            extra_set = ", final_cost=:fc"
-            fields["fc"] = final_cost
+        final_cost_raw = request.form.get("final_cost", "").strip()
+        if not final_cost_raw:
+            flash("A manufacturer quote is required before completing this order.", "error")
+            return redirect(url_for("manufacturer.advance_order", order_id=order_id))
+        final_cost = parse_price(final_cost_raw)
+        if maximum_price is None or not valid_manufacturer_quote(customer_price, final_cost):
+            if maximum_price is None:
+                message = "A saved customer price is unavailable, so a manufacturer quote cannot be submitted."
+            else:
+                message = f"Enter a valid quote no greater than {format_cost(maximum_price)} (75% of the customer price)."
+            flash(message, "error")
+            return redirect(url_for("manufacturer.advance_order", order_id=order_id))
+        fields["fc"] = final_cost
+        extra_set = ", final_cost=:fc"
 
     db.session.execute(
         db.text(f"UPDATE orders SET status=:status, updated_at=now(){extra_set} WHERE order_id=:oid"),
