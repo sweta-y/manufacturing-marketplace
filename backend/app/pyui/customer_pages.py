@@ -44,22 +44,31 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
             order_id = order.get("order_id")
             detail_url = url_for("customer.order_detail", order_id=order_id)
             status_label = production_status_label(order.get("status"))
-            order_rows.append(
-                f'''<tr>
-                  <td>#{e(order_id)}</td>
-                  <td>{e(order.get("filename") or "—")}</td>
-                  <td>{e(order.get("process_name") or "—")}</td>
-                  <td>{order_status_badge(status_label)}</td>
-                  <td>{e(format_date(order.get("created_at")))}</td>
-                  <td><a class="text-link" href="{detail_url}">View</a></td>
-                </tr>'''
+            status_badge = order_status_badge(status_label).replace(
+                'class="badge ',
+                'style="max-width:100%;white-space:normal;overflow-wrap:anywhere;" class="badge ',
+                1,
             )
-        recent_orders_html = f'''<div class="table-wrapper">
-          <table class="table" aria-label="Recent customer orders">
-            <thead><tr><th scope="col">Order</th><th scope="col">Design / Part</th><th scope="col">Process</th><th scope="col">Status</th><th scope="col">Date</th><th scope="col">Action</th></tr></thead>
-            <tbody>{"".join(order_rows)}</tbody>
-          </table>
-        </div>'''
+            filename = order.get("filename") or "—"
+            order_rows.append(
+                f'''<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:var(--space-3);padding:var(--space-3) 0;border-bottom:1px solid var(--color-border-light);">
+                  <div style="min-width:0;">
+                    <div style="display:flex;align-items:center;gap:var(--space-2);min-width:0;">
+                      <strong style="white-space:nowrap;">#{e(order_id)}</strong>
+                      <span title="{e(filename)}" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{e(filename)}</span>
+                    </div>
+                    <div class="text-muted text-sm" style="display:flex;gap:var(--space-2);min-width:0;margin-top:var(--space-1);">
+                      <span title="{e(order.get("process_name") or "—")}" style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{e(order.get("process_name") or "—")}</span>
+                      <span>&middot;</span><span style="white-space:nowrap;flex-shrink:0;">{e(format_date(order.get("created_at")))}</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-2);min-width:0;">
+                    <span style="max-width:150px;white-space:normal;text-align:center;justify-content:center;">{status_badge}</span>
+                    <a class="text-link" href="{detail_url}">View</a>
+                  </div>
+                </div>'''
+            )
+        recent_orders_html = f'<div aria-label="Recent customer orders">{"".join(order_rows)}</div>'
     else:
         recent_orders_html = f'''<div class="empty-state" style="padding:var(--space-8) var(--space-4);">
           <h3 class="empty-state__title">No orders yet</h3>
@@ -71,22 +80,42 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
     for order in production_orders[:3]:
         order_id = order.get("order_id")
         expected = order.get("expected_completion")
-        expected_html = f'<p class="text-muted text-sm">Estimated completion: {e(format_date(expected))}</p>' if expected else ""
+        expected_html = f'<span>Estimated completion: {e(format_date(expected))}</span>' if expected else ""
         history = order.get("history") or []
-        history_html = ""
+        supported_stages = ("Request Submitted", "Manufacturer Selected", "Accepted", "Manufacturing", "Quality Check", "Completed")
+        current_status = order.get("status")
+        stage_count = supported_stages.index(current_status) + 1 if current_status in supported_stages else 0
+        latest_date_html = ""
         if history:
-            history_html = "".join(
-                f'<li><strong>{e(event.get("status"))}</strong> <span class="text-muted text-sm">{e(format_datetime(event.get("changed_at")))}</span></li>'
-                for event in history[-3:]
+            timeline = " &rarr; ".join(
+                e(event.get("status")) for event in history[-3:]
             )
-            history_html = f'<ol style="padding-left:var(--space-5);margin:var(--space-2) 0;">{history_html}</ol>'
+            latest_event = history[-1]
+            latest_date = latest_event.get("changed_at")
+            latest_date_html = f'<span>Updated {e(format_datetime(latest_date))}</span>' if latest_date else ""
+        else:
+            timeline = (
+                f'Current order status: {e(current_status)}. No status history entries are available yet.'
+                if current_status else "No status history entries are available yet."
+            )
+        progress_html = f'''<div style="display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-2);">
+          <div role="progressbar" aria-label="Current production stage" aria-valuemin="0" aria-valuemax="6" aria-valuenow="{stage_count}" style="height:6px;flex:1;background:var(--color-border);border-radius:var(--radius-full);overflow:hidden;">
+            <div style="height:100%;width:{stage_count / 6 * 100}%;background:var(--color-primary);border-radius:var(--radius-full);"></div>
+          </div>
+          <span class="text-muted text-sm" style="white-space:nowrap;">Stage {stage_count} / 6</span>
+        </div>
+        <p class="text-muted text-sm" style="margin-top:var(--space-2);overflow-wrap:anywhere;">{timeline}</p>
+        <div class="text-muted text-sm" style="display:flex;flex-wrap:wrap;gap:var(--space-3);">{latest_date_html}{expected_html}</div>'''
         production_cards.append(
-            f'''<div style="padding:var(--space-3) 0;border-bottom:1px solid var(--color-border);">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap;">
-                <strong>{e(order.get("filename") or "Design")}</strong>{order_status_badge(production_status_label(order.get("status")))}
+            f'''<div style="padding:var(--space-3) 0;border-bottom:1px solid var(--color-border-light);">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);min-width:0;">
+                <strong title="{e(order.get("filename") or "—")}" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{e(order.get("filename") or "—")}</strong>
+                {order_status_badge(production_status_label(order.get("status")))}
               </div>
-              <p class="text-muted text-sm">Order #{e(order_id)}</p>
-              {expected_html}{history_html}
+              <div class="text-muted text-sm" style="display:flex;justify-content:space-between;gap:var(--space-2);margin-top:var(--space-1);">
+                <span style="white-space:nowrap;">Order #{e(order_id)}</span>
+              </div>
+              {progress_html}
             </div>'''
         )
     if production_cards:
@@ -111,8 +140,8 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
             status_html = f'<span class="badge badge-neutral">{e(design_status)}</span>' if design_status else ""
             design_cards.append(
                 f'''<div class="card"><div class="card__body" style="padding:var(--space-4);">
-                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3);">
-                    <strong style="overflow-wrap:anywhere;">{e(design.get("filename"))}</strong>{status_html}
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-2);min-width:0;flex-wrap:wrap;">
+                    <strong title="{e(design.get("filename"))}" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{e(design.get("filename"))}</strong>{status_html}
                   </div>
                   <p class="text-muted text-sm" style="margin:var(--space-2) 0;">Uploaded {e(format_date(design.get("uploaded_at")))}</p>
                   <a class="text-link" href="{open_url}">Open</a>
@@ -142,21 +171,21 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:var(--space-5);margin-top:var(--space-6);align-items:start;">
   <section class="card" aria-labelledby="recent-orders-title">
-    <div class="card__header"><span class="card__title" id="recent-orders-title">Recent Orders</span><a class="text-link" href="{orders_url}">View all â†’</a></div>
-    <div class="card__body" style="padding:var(--space-4);">{recent_orders_html}</div>
+    <div class="card__header" style="padding:var(--space-3) var(--space-4);"><span class="card__title" id="recent-orders-title">Recent Orders</span><a class="text-link" href="{orders_url}">View all &rarr;</a></div>
+    <div class="card__body" style="padding:var(--space-3) var(--space-4);">{recent_orders_html}</div>
   </section>
   <section class="card" aria-labelledby="production-status-title">
-    <div class="card__header"><span class="card__title" id="production-status-title">Production Status</span></div>
-    <div class="card__body" style="padding:var(--space-4);">
+    <div class="card__header" style="padding:var(--space-3) var(--space-4);"><span class="card__title" id="production-status-title">Production Status</span></div>
+    <div class="card__body" style="padding:var(--space-3) var(--space-4);">
       {production_html}
-      <a class="text-link" href="{track_url}">View production details â†’</a>
+      <a class="text-link" href="{track_url}">View production details &rarr;</a>
     </div>
   </section>
 </div>
 
 <section class="card" aria-labelledby="recent-designs-title" style="margin-top:var(--space-6);">
-  <div class="card__header"><span class="card__title" id="recent-designs-title">Recent Designs</span><a class="text-link" href="{saved_designs_url}">View all â†’</a></div>
-  <div class="card__body" style="padding:var(--space-4);">{recent_designs_html}</div>
+  <div class="card__header" style="padding:var(--space-3) var(--space-4);"><span class="card__title" id="recent-designs-title">Recent Designs</span><a class="text-link" href="{saved_designs_url}">View all &rarr;</a></div>
+  <div class="card__body" style="padding:var(--space-3) var(--space-4);">{recent_designs_html}</div>
 </section>"""
 
     return portal_page(
