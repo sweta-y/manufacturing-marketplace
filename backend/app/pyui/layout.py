@@ -91,9 +91,7 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
         nav_links.append(sidebar_link(url_for("admin.manufacturer_approvals"), "Manufacturer Approvals", active_nav == "manufacturer_approvals"))
 
     account_links = []
-    if portal == "customer":
-        account_links.append(sidebar_link(url_for("customer.profile"), "Profile", active_nav == "profile"))
-    elif portal == "manufacturer":
+    if portal == "manufacturer":
         account_links.append(sidebar_link(url_for("manufacturer.profile"), "Profile", active_nav == "profile"))
 
     account_section = ""
@@ -111,6 +109,11 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
         user_name = "User"
 
     user_role_display = e(portal.capitalize())
+    user_container = "a" if portal == "customer" else "div"
+    if portal == "customer":
+        user_container_attrs = f'class="sidebar__user sidebar__user--profile-link" href="{url_for("customer.profile")}" aria-label="Open customer profile"'
+    else:
+        user_container_attrs = 'class="sidebar__user"'
 
     role_badge = ""
     if current_user and current_user.role:
@@ -144,7 +147,7 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
 {account_section}
     </nav>
 
-    <div class="sidebar__user">
+    <{user_container} {user_container_attrs}>
       <div class="sidebar__user-avatar" aria-hidden="true">
         {avatar_letter}
       </div>
@@ -152,7 +155,7 @@ def portal_page(portal, page_title, active_nav, content, current_user=None, titl
         <div class="sidebar__user-name">{user_name}</div>
         <div class="sidebar__user-role">{user_role_display}</div>
       </div>
-    </div>
+    </{user_container}>
   </aside>
 
   <header class="topbar" role="banner">
