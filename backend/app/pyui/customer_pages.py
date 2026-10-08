@@ -12,7 +12,7 @@ def production_status_label(status):
 
 def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
                    in_production_count=0, recent_orders=None, production_orders=None,
-                   recent_designs=None, current_user=None, **kwargs):
+                   recent_designs=None, current_user=None, completed_order_count=None, **kwargs):
     if current_user is None and "user_id" in session:
         current_user = User.query.get(session["user_id"])
     user_name = e(current_user.full_name) if current_user and current_user.full_name else ""
@@ -24,18 +24,17 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
     production_orders = production_orders or []
     recent_designs = recent_designs or []
 
-    stats = [
-        (order_count, "Total Orders"),
-        (active_order_count, "Active Orders"),
-        (draft_design_count, "Draft Designs"),
-        (in_production_count, "In Production"),
-    ]
+    pending_count = max(0, int(active_order_count or 0) - int(in_production_count or 0))
+    stats = (
+        (order_count, "Total Orders", "&#9638;"),
+        (in_production_count, "In Production", "&#9881;"),
+        (pending_count, "Pending", "&#9711;"),
+        (completed_order_count, "Completed", "&#10003;"),
+    )
     stats_html = "".join(
-        f'''<div class="card"><div class="card__body" style="padding:var(--space-5) var(--space-6);">
-          <div style="font-size:var(--font-size-h3);font-weight:var(--font-weight-bold);">{e(value)}</div>
-          <div class="text-muted text-sm">{label}</div>
-        </div></div>'''
-        for value, label in stats
+        f'''<div class="customer-dashboard__stat"><span class="customer-dashboard__stat-icon" aria-hidden="true">{icon}</span>
+          <span class="customer-dashboard__stat-copy"><strong>{e(value) if value is not None else "—"}</strong><span>{label}</span></span></div>'''
+        for value, label, icon in stats
     )
 
     if recent_orders:
@@ -43,6 +42,9 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
         for order in recent_orders:
             order_id = order.get("order_id")
             detail_url = url_for("customer.order_detail", order_id=order_id)
+            manufacturer_name = order.get("business_name") or order.get("manufacturer_name") or "—"
+            customer_price = order.get("customer_price", order.get("estimated_cost"))
+            customer_price_label = format_cost(customer_price) if customer_price is not None else "—"
             status_label = production_status_label(order.get("status"))
             status_badge = order_status_badge(status_label).replace(
                 'class="badge ',
@@ -51,28 +53,29 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
             )
             filename = order.get("filename") or "—"
             order_rows.append(
-                f'''<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:var(--space-3);padding:var(--space-3) 0;border-bottom:1px solid var(--color-border-light);">
+                f'''<div class="customer-dashboard__order" style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:var(--space-3);padding:var(--space-3) 0;border-bottom:1px solid var(--color-border-light);">
                   <div style="min-width:0;">
                     <div style="display:flex;align-items:center;gap:var(--space-2);min-width:0;">
-                      <strong style="white-space:nowrap;">#{e(order_id)}</strong>
+                      <strong style="white-space:nowrap;">Order #{e(order_id)}</strong>
                       <span title="{e(filename)}" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{e(filename)}</span>
                     </div>
                     <div class="text-muted text-sm" style="display:flex;gap:var(--space-2);min-width:0;margin-top:var(--space-1);">
                       <span title="{e(order.get("process_name") or "—")}" style="min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{e(order.get("process_name") or "—")}</span>
                       <span>&middot;</span><span style="white-space:nowrap;flex-shrink:0;">{e(format_date(order.get("created_at")))}</span>
                     </div>
+                    <div class="customer-dashboard__order-sub"><span>Manufacturer: {e(manufacturer_name)}</span><span>Price: {customer_price_label}</span></div>
                   </div>
                   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-2);min-width:0;">
-                    <span style="max-width:150px;white-space:normal;text-align:center;justify-content:center;">{status_badge}</span>
-                    <a class="text-link" href="{detail_url}">View</a>
+                    <span class="customer-dashboard__meta-label">Status</span><span style="max-width:150px;white-space:normal;text-align:center;justify-content:center;">{status_badge}</span>
+                    <a class="text-link" href="{detail_url}">View order &rarr;</a>
                   </div>
                 </div>'''
             )
         recent_orders_html = f'<div aria-label="Recent customer orders">{"".join(order_rows)}</div>'
     else:
-        recent_orders_html = f'''<div class="empty-state" style="padding:var(--space-8) var(--space-4);">
+        recent_orders_html = f'''<div class="empty-state customer-dashboard__empty" style="padding:var(--space-8) var(--space-4);">
           <h3 class="empty-state__title">No orders yet</h3>
-          <p class="empty-state__desc">Orders you place will appear here.</p>
+          <p class="empty-state__desc">Upload your first design to start manufacturing.</p>
           <a class="btn btn-primary" href="{upload_url}">Upload Design</a>
         </div>'''
 
@@ -82,9 +85,12 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
         expected = order.get("expected_completion")
         expected_html = f'<span>Estimated completion: {e(format_date(expected))}</span>' if expected else ""
         history = order.get("history") or []
-        supported_stages = ("Request Submitted", "Manufacturer Selected", "Accepted", "Manufacturing", "Quality Check", "Completed")
         current_status = order.get("status")
-        stage_count = supported_stages.index(current_status) + 1 if current_status in supported_stages else 0
+        stage_index_by_status = {
+            "Request Submitted": 0, "Manufacturer Selected": 0, "Accepted": 0,
+            "Manufacturing": 1, "Quality Check": 2, "Completed": 3,
+        }
+        current_stage = stage_index_by_status.get(current_status)
         latest_date_html = ""
         if history:
             timeline = " &rarr; ".join(
@@ -98,14 +104,18 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
                 f'Current order status: {e(current_status)}. No status history entries are available yet.'
                 if current_status else "No status history entries are available yet."
             )
-        progress_html = f'''<div style="display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-2);">
-          <div role="progressbar" aria-label="Current production stage" aria-valuemin="0" aria-valuemax="6" aria-valuenow="{stage_count}" style="height:6px;flex:1;background:var(--color-border);border-radius:var(--radius-full);overflow:hidden;">
-            <div style="height:100%;width:{stage_count / 6 * 100}%;background:var(--color-primary);border-radius:var(--radius-full);"></div>
-          </div>
-          <span class="text-muted text-sm" style="white-space:nowrap;">Stage {stage_count} / 6</span>
+        stage_labels = ("Confirmed", "Production", "Quality Check", "Completed")
+        stage_items = "".join(
+            f'''<div class="customer-dashboard__stage{' customer-dashboard__stage--done' if current_stage is not None and index < current_stage else ''}{' customer-dashboard__stage--current' if index == current_stage else ''}"{' aria-current="step"' if index == current_stage else ''}>
+              <span class="customer-dashboard__stage-dot" aria-hidden="true"></span><span>{label}</span></div>'''
+            for index, label in enumerate(stage_labels)
+        )
+        current_stage_label = stage_labels[current_stage] if current_stage is not None else "Awaiting status update"
+        progress_html = f'''<div class="customer-dashboard__tracker" aria-label="Production progress: {e(current_stage_label)}">
+          <div class="customer-dashboard__stages">{stage_items}</div>
         </div>
-        <p class="text-muted text-sm" style="margin-top:var(--space-2);overflow-wrap:anywhere;">{timeline}</p>
-        <div class="text-muted text-sm" style="display:flex;flex-wrap:wrap;gap:var(--space-3);">{latest_date_html}{expected_html}</div>'''
+        <p class="customer-dashboard__timeline">{timeline}</p>
+        <div class="customer-dashboard__dates">{latest_date_html}{expected_html}</div>'''
         production_cards.append(
             f'''<div style="padding:var(--space-3) 0;border-bottom:1px solid var(--color-border-light);">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);min-width:0;">
@@ -123,7 +133,7 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
         if len(production_orders) > 3:
             production_html += f'<p class="text-muted text-sm">Showing 3 of {e(len(production_orders))} active orders.</p>'
     else:
-        production_html = '''<div class="empty-state" style="padding:var(--space-8) var(--space-4);">
+        production_html = '''<div class="empty-state customer-dashboard__empty" style="padding:var(--space-8) var(--space-4);">
           <h3 class="empty-state__title">No active production</h3>
           <p class="empty-state__desc">Your active manufacturing orders will appear here.</p>
         </div>'''
@@ -137,44 +147,88 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
             elif design_status:
                 design_status = str(design_status).replace("_", " ").title()
             open_url = url_for("customer.download_file", file_id=design.get("file_id"))
+            filename = design.get("filename") or "—"
+            file_format = filename.rsplit(".", 1)[-1].upper() if "." in filename else "FILE"
             status_html = f'<span class="badge badge-neutral">{e(design_status)}</span>' if design_status else ""
             design_cards.append(
-                f'''<div class="card"><div class="card__body" style="padding:var(--space-4);">
+                f'''<div class="card customer-dashboard__design"><div class="card__body" style="padding:var(--space-4);">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-2);min-width:0;flex-wrap:wrap;">
-                    <strong title="{e(design.get("filename"))}" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{e(design.get("filename"))}</strong>{status_html}
+                    <span class="customer-dashboard__file-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M7 3h7l5 5v13H5V3h2Zm7 0v5h5M8 14h8m-8 3h8"/></svg></span>
+                    <strong title="{e(filename)}" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{e(filename)}</strong>{status_html}
                   </div>
-                  <p class="text-muted text-sm" style="margin:var(--space-2) 0;">Uploaded {e(format_date(design.get("uploaded_at")))}</p>
-                  <a class="text-link" href="{open_url}">Open</a>
+                  <p class="text-muted text-sm" style="margin:var(--space-2) 0;">{e(file_format)} <span aria-hidden="true">&middot;</span> Uploaded {e(format_date(design.get("uploaded_at")))}</p>
+                  <a class="text-link" href="{open_url}">Open design &rarr;</a>
                 </div></div>'''
             )
         recent_designs_html = f'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:var(--space-3);">{"".join(design_cards)}</div>'
     else:
-        recent_designs_html = f'''<div class="empty-state" style="padding:var(--space-8) var(--space-4);">
+        recent_designs_html = f'''<div class="empty-state customer-dashboard__empty" style="padding:var(--space-8) var(--space-4);">
           <h3 class="empty-state__title">No designs yet</h3>
           <p class="empty-state__desc">Upload your first design to get started.</p>
           <a class="btn btn-primary" href="{upload_url}">Upload Design</a>
         </div>'''
 
-    content = f"""<div class="main-content__header">
-  <h1 class="main-content__title">Customer Dashboard</h1>
-  <p class="main-content__subtitle">Welcome back, {user_name}.</p>
+    content = f"""<style>
+.customer-dashboard {{ --dashboard-radius: var(--radius-lg); display:flex; flex-direction:column; gap:var(--space-5); min-width:0; }}
+.customer-dashboard__welcome {{ display:flex; align-items:center; justify-content:space-between; gap:var(--space-4); }}
+.customer-dashboard .main-content__header {{ margin-bottom:0; }}
+.customer-dashboard__welcome .main-content__title {{ font-size:clamp(1.6rem,2.4vw,var(--font-size-h2)); }}
+.customer-dashboard__eyebrow {{ margin-bottom:var(--space-2); color:var(--color-primary); font-size:var(--font-size-xs); font-weight:var(--font-weight-bold); letter-spacing:.08em; }}
+.customer-dashboard__stats {{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--space-4); }}
+.customer-dashboard__stat {{ display:flex; align-items:center; gap:var(--space-4); min-width:0; min-height:96px; padding:var(--space-5); border:1px solid var(--color-border); border-radius:var(--dashboard-radius); background:var(--color-surface); box-shadow:var(--shadow-xs); }}
+.customer-dashboard__stat-icon {{ display:grid; place-items:center; flex:0 0 38px; width:38px; height:38px; border:1px solid var(--color-border); border-radius:var(--radius-md); color:var(--color-primary); background:var(--color-surface-muted); font-size:19px; }}
+.customer-dashboard__stat-copy {{ display:flex; flex-direction:column; gap:var(--space-1); min-width:0; }}
+.customer-dashboard__stat-copy strong {{ color:var(--color-text-primary); font-size:var(--font-size-h3); line-height:1.1; }}
+.customer-dashboard__stat-copy span {{ color:var(--color-text-secondary); font-size:var(--font-size-sm); }}
+.customer-dashboard__quick-actions {{ display:flex; flex-wrap:wrap; gap:var(--space-2); }}
+.customer-dashboard__columns {{ display:grid; grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr); gap:var(--space-5); align-items:start; min-width:0; }}
+.customer-dashboard__panel {{ min-width:0; overflow:hidden; border:1px solid var(--color-border); border-radius:var(--dashboard-radius); background:var(--color-surface); box-shadow:var(--shadow-xs); }}
+.customer-dashboard__panel .card__header {{ display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); padding:var(--space-4) var(--space-5)!important; border-bottom:1px solid var(--color-border-light); }}
+.customer-dashboard__panel .card__title {{ font-size:var(--font-size-md); }}
+.customer-dashboard__panel .card__body {{ padding:var(--space-2) var(--space-5)!important; min-width:0; }}
+.customer-dashboard__orders {{ min-width:0; }}
+.customer-dashboard__order {{ display:grid!important; grid-template-columns:minmax(0,1fr) auto; align-items:center!important; gap:var(--space-3)!important; padding:var(--space-4) 0!important; }}
+.customer-dashboard__order-title {{ min-width:0; display:flex; align-items:center; gap:var(--space-2); }}
+.customer-dashboard__order-title span {{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }}
+.customer-dashboard__order-sub {{ display:flex; flex-wrap:wrap; gap:var(--space-2); margin-top:var(--space-2); color:var(--color-text-secondary); font-size:var(--font-size-xs); }}
+.customer-dashboard__meta-label {{ color:var(--color-text-secondary); font-size:var(--font-size-xs); }}
+.customer-dashboard__badge {{ justify-self:end; }}
+.customer-dashboard__tracker {{ margin-top:var(--space-4); }}
+.customer-dashboard__stages {{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }}
+.customer-dashboard__stage {{ display:flex; flex-direction:column; align-items:center; gap:var(--space-2); color:var(--color-text-tertiary); text-align:center; font-size:10px; line-height:1.2; }}
+.customer-dashboard__stage-dot {{ width:11px; height:11px; border:2px solid var(--color-border); border-radius:50%; background:var(--color-surface); }}
+.customer-dashboard__stage--done,.customer-dashboard__stage--current {{ color:var(--color-text-primary); font-weight:var(--font-weight-semibold); }}
+.customer-dashboard__stage--done .customer-dashboard__stage-dot,.customer-dashboard__stage--current .customer-dashboard__stage-dot {{ border-color:var(--color-primary); background:var(--color-primary); }}
+.customer-dashboard__timeline,.customer-dashboard__dates {{ color:var(--color-text-secondary); font-size:var(--font-size-xs); overflow-wrap:anywhere; }}
+.customer-dashboard__designs {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:var(--space-3); padding:var(--space-4) 0; }}
+.customer-dashboard__design {{ min-width:0; border:1px solid var(--color-border-light); border-radius:var(--radius-md); }}
+.customer-dashboard__file-icon {{ display:grid; place-items:center; flex:0 0 36px; width:36px; height:36px; border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-surface-muted); color:var(--color-primary); }}
+.customer-dashboard__empty {{ padding:var(--space-6) var(--space-4)!important; text-align:center; }}
+@media(max-width:1050px) {{ .customer-dashboard__columns {{ grid-template-columns:minmax(0,1fr); }} }}
+@media(max-width:900px) {{ .customer-dashboard__stats {{ grid-template-columns:repeat(2,minmax(0,1fr)); }} }}
+@media(max-width:560px) {{ .customer-dashboard__welcome {{ align-items:flex-start; flex-direction:column; }} .customer-dashboard__stat {{ min-height:80px; padding:var(--space-3); gap:var(--space-3); }} .customer-dashboard__stat-copy strong {{ font-size:var(--font-size-lg); }} .customer-dashboard__columns {{ gap:var(--space-4); }} .customer-dashboard__panel .card__body {{ padding-inline:var(--space-3)!important; }} }}
+</style>
+<div class="customer-dashboard">
+<div class="main-content__header customer-dashboard__welcome">
+  <div><p class="customer-dashboard__eyebrow">CUSTOMER WORKSPACE</p><h1 class="main-content__title">Welcome back{', ' + user_name if user_name else ''}</h1>
+  <p class="main-content__subtitle">Manage your designs, orders, and production updates.</p></div>
+  <a class="btn btn-primary" href="{upload_url}">+ Upload New Design</a>
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--space-4);">{stats_html}</div>
+<div class="customer-dashboard__stats">{stats_html}</div>
 
-<div style="display:flex;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-6);">
-  <a class="btn btn-primary" href="{upload_url}">Upload Design</a>
-  <a class="btn btn-secondary" href="{saved_designs_url}">Saved Designs</a>
-  <a class="btn btn-secondary" href="{orders_url}">View My Orders</a>
+<nav class="customer-dashboard__quick-actions" aria-label="Customer quick actions">
+  <a class="btn btn-secondary" href="{upload_url}">Upload Design</a>
+  <a class="btn btn-secondary" href="{orders_url}">View Orders</a>
   <a class="btn btn-secondary" href="{track_url}">Track Production</a>
-</div>
+</nav>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:var(--space-5);margin-top:var(--space-6);align-items:start;">
-  <section class="card" aria-labelledby="recent-orders-title">
-    <div class="card__header" style="padding:var(--space-3) var(--space-4);"><span class="card__title" id="recent-orders-title">Recent Orders</span><a class="text-link" href="{orders_url}">View all &rarr;</a></div>
+<div class="customer-dashboard__columns">
+  <section class="card customer-dashboard__panel" aria-labelledby="recent-orders-title">
+    <div class="card__header" style="padding:var(--space-3) var(--space-4);"><span class="card__title" id="recent-orders-title">Recent Orders</span><a class="text-link" href="{orders_url}">View All Orders &rarr;</a></div>
     <div class="card__body" style="padding:var(--space-3) var(--space-4);">{recent_orders_html}</div>
   </section>
-  <section class="card" aria-labelledby="production-status-title">
+  <section class="card customer-dashboard__panel" aria-labelledby="production-status-title">
     <div class="card__header" style="padding:var(--space-3) var(--space-4);"><span class="card__title" id="production-status-title">Production Status</span></div>
     <div class="card__body" style="padding:var(--space-3) var(--space-4);">
       {production_html}
@@ -183,10 +237,11 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
   </section>
 </div>
 
-<section class="card" aria-labelledby="recent-designs-title" style="margin-top:var(--space-6);">
+<section class="card customer-dashboard__panel" aria-labelledby="recent-designs-title">
   <div class="card__header" style="padding:var(--space-3) var(--space-4);"><span class="card__title" id="recent-designs-title">Recent Designs</span><a class="text-link" href="{saved_designs_url}">View all &rarr;</a></div>
   <div class="card__body" style="padding:var(--space-3) var(--space-4);">{recent_designs_html}</div>
-</section>"""
+</section>
+</div>"""
 
     return portal_page(
         portal="customer",
