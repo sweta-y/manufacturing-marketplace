@@ -1,15 +1,17 @@
-"""Service to call the C cost estimator and parse results."""
+"""Rule-based INR cost estimator used by the customer configuration flow."""
 import json
-import subprocess
 import os
+import subprocess
 from pathlib import Path
 
 
-# Fallback estimator data (mirrors the C code logic)
+# Rates are per job, per modeled production hour, or per piece, as indicated.
+# The estimator has no part dimensions or weights, so material is priced per
+# configured piece and production uses the existing process time-per-piece.
 _PROCESSES = {
-    1: {"name": "CNC Machining", "setup_cost": 500.0, "setup_time": 2.0, "time_per_unit": 0.5},
-    2: {"name": "3D Printing", "setup_cost": 100.0, "setup_time": 0.5, "time_per_unit": 0.75},
-    3: {"name": "Laser Cutting", "setup_cost": 200.0, "setup_time": 1.0, "time_per_unit": 0.2},
+    1: {"name": "CNC Machining", "setup_cost": 500.0, "setup_time": 2.0, "time_per_unit": 0.5, "hourly_rate": 800.0},
+    2: {"name": "3D Printing", "setup_cost": 100.0, "setup_time": 0.5, "time_per_unit": 0.75, "hourly_rate": 250.0},
+    3: {"name": "Laser Cutting", "setup_cost": 200.0, "setup_time": 1.0, "time_per_unit": 0.2, "hourly_rate": 500.0},
 }
 
 _MATERIALS = {
@@ -20,18 +22,21 @@ _MATERIALS = {
 }
 
 
+_FINISH_RATES = {"Standard": 0.0, "Fine": 50.0, "Ultra Fine": 120.0}
+
+
 def get_cost_estimator_path():
-    """Return the platform-specific path to the cost estimator binary."""
     backend_dir = Path(__file__).parent.parent.parent
     binary_name = "cost_estimator.exe" if os.name == "nt" else "cost_estimator"
     return backend_dir / "c_module" / binary_name
 
 
-def _estimate_cost_fallback(process_id, material_id, quantity):
-    """Python fallback estimator with same logic as C code."""
+def _calculate_estimate(process_id, material_id, quantity, surface_finish="Standard"):
+    """Calculate an INR estimate and its auditable component breakdown."""
     process_id = int(process_id)
     material_id = int(material_id)
     quantity = int(quantity)
+    surface_finish = str(surface_finish or "Standard")
     
     if quantity <= 0:
         return {"error": "quantity must be positive", "fallback": True}
@@ -41,11 +46,17 @@ def _estimate_cost_fallback(process_id, material_id, quantity):
     
     if material_id not in _MATERIALS:
         return {"error": f"Unknown material_id {material_id}", "fallback": True}
+    if surface_finish not in _FINISH_RATES:
+        return {"error": "Unknown surface finish", "fallback": True}
     
     p = _PROCESSES[process_id]
     m = _MATERIALS[material_id]
     
-    estimated_cost = p["setup_cost"] + (quantity * m["rate_per_unit"] * m["multiplier"])
+    setup_cost = p["setup_cost"]
+    material_cost = quantity * m["rate_per_unit"] * m["multiplier"]
+    machining_cost = quantity * p["time_per_unit"] * p["hourly_rate"]
+    surface_finish_cost = quantity * _FINISH_RATES[surface_finish]
+    estimated_cost = setup_cost + material_cost + machining_cost + surface_finish_cost
     estimated_time_hours = p["setup_time"] + (quantity * p["time_per_unit"])
     
     return {
@@ -55,72 +66,34 @@ def _estimate_cost_fallback(process_id, material_id, quantity):
         "material_name": m["name"],
         "quantity": quantity,
         "estimated_cost": estimated_cost,
+        "cost_breakdown": {
+            "setup_cost": setup_cost,
+            "material_cost": material_cost,
+            "machining_cost": machining_cost,
+            "surface_finish_cost": surface_finish_cost,
+            "estimated_total": estimated_cost,
+        },
+        "surface_finish": surface_finish,
         "estimated_time_hours": estimated_time_hours,
         "error": None,
-        "fallback": True,
+        "fallback": False,
     }
 
 
-def estimate_cost(process_id, material_id, quantity):
-    """
-    Call the platform-specific cost estimator binary with process, material, and quantity.
-    Falls back to Python estimator if exe is not available.
-    
-    Returns: dict with keys {estimated_cost, estimated_time_hours}
-             or {error: error_message} if estimator fails or is missing.
-    """
+def estimate_cost(process_id, material_id, quantity, surface_finish="Standard"):
+    """Return the estimate, time, and line items from the single backend formula."""
     estimator_path = get_cost_estimator_path()
-    
-    # Check if executable exists
-    if not estimator_path.exists():
-        # Use Python fallback
-        result = _estimate_cost_fallback(process_id, material_id, quantity)
-        if result.get("error"):
-            return {"error": "Cost estimate unavailable (estimator not compiled yet)", "fallback": True}
-        return result
-    
-    try:
-        # Call the executable with command-line arguments
-        result = subprocess.run(
-            [str(estimator_path), str(process_id), str(material_id), str(quantity)],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        
-        if result.returncode != 0:
-            error_msg = result.stdout.strip() if result.stdout else "Unknown error"
-            try:
-                error_json = json.loads(error_msg)
-                if "error" in error_json:
-                    # Fall back to Python estimator
-                    return _estimate_cost_fallback(process_id, material_id, quantity)
-            except json.JSONDecodeError:
-                pass
-            # Fall back to Python estimator
-            return _estimate_cost_fallback(process_id, material_id, quantity)
-        
-        # Parse JSON output
-        output = result.stdout.strip()
-        data = json.loads(output)
-        
-        if "error" in data:
-            # Fall back to Python estimator
-            return _estimate_cost_fallback(process_id, material_id, quantity)
-        
-        return {
-            "estimated_cost": data.get("estimated_cost"),
-            "estimated_time_hours": data.get("estimated_time_hours"),
-            "process_name": data.get("process_name"),
-            "material_name": data.get("material_name"),
-            "error": None,
-            "fallback": False,
-        }
-    
-    except subprocess.TimeoutExpired:
-        # Fall back to Python estimator
-        return _estimate_cost_fallback(process_id, material_id, quantity)
-    except Exception:
-        # Fall back to Python estimator
-        return _estimate_cost_fallback(process_id, material_id, quantity)
-
+    if estimator_path.exists():
+        try:
+            result = subprocess.run(
+                [str(estimator_path), str(process_id), str(material_id), str(quantity), str(surface_finish)],
+                capture_output=True, text=True, timeout=5, check=True,
+            )
+            data = json.loads(result.stdout)
+            if not data.get("error") and data.get("cost_breakdown"):
+                data["error"] = None
+                data["fallback"] = False
+                return data
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError, ValueError):
+            pass
+    return _calculate_estimate(process_id, material_id, quantity, surface_finish)

@@ -1,11 +1,13 @@
 ﻿#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     int id;
     double setup_cost;
     double setup_time;
     double time_per_unit;
+    double hourly_rate;
     const char *name;
 } ProcessInfo;
 
@@ -17,9 +19,9 @@ typedef struct {
 } MaterialInfo;
 
 ProcessInfo processes[] = {
-    {1, 500.0, 2.0, 0.5, "CNC Machining"},
-    {2, 100.0, 0.5, 0.75, "3D Printing"},
-    {3, 200.0, 1.0, 0.2, "Laser Cutting"}
+    {1, 500.0, 2.0, 0.5, 800.0, "CNC Machining"},
+    {2, 100.0, 0.5, 0.75, 250.0, "3D Printing"},
+    {3, 200.0, 1.0, 0.2, 500.0, "Laser Cutting"}
 };
 int num_processes = 3;
 
@@ -32,13 +34,21 @@ MaterialInfo materials[] = {
 int num_materials = 4;
 
 int main(int argc, char *argv[]) {
-    if (argc != 4) {
-        printf("{\"error\":\"Usage: cost_estimator <process_id> <material_id> <quantity>\"}\n");
+    if (argc != 5) {
+        printf("{\"error\":\"Usage: cost_estimator <process_id> <material_id> <quantity> <surface_finish>\"}\n");
         return 1;
     }
     int process_id = atoi(argv[1]);
     int material_id = atoi(argv[2]);
     int quantity = atoi(argv[3]);
+    const char *finish = argv[4];
+    double finish_rate = 0.0;
+    if (strcmp(finish, "Fine") == 0) finish_rate = 50.0;
+    else if (strcmp(finish, "Ultra Fine") == 0) finish_rate = 120.0;
+    else if (strcmp(finish, "Standard") != 0) {
+        printf("{\"error\":\"Unknown surface finish\"}\n");
+        return 1;
+    }
     if (quantity <= 0) {
         printf("{\"error\":\"quantity must be positive\"}\n");
         return 1;
@@ -53,9 +63,14 @@ int main(int argc, char *argv[]) {
     }
     if (!p) { printf("{\"error\":\"Unknown process_id %d\"}\n", process_id); return 1; }
     if (!m) { printf("{\"error\":\"Unknown material_id %d\"}\n", material_id); return 1; }
-    double estimated_cost = p->setup_cost + (quantity * m->rate_per_unit * m->multiplier);
+    double setup_cost = p->setup_cost;
+    double material_cost = quantity * m->rate_per_unit * m->multiplier;
+    double machining_cost = quantity * p->time_per_unit * p->hourly_rate;
+    double surface_finish_cost = quantity * finish_rate;
+    double estimated_cost = setup_cost + material_cost + machining_cost + surface_finish_cost;
     double estimated_time_hours = p->setup_time + (quantity * p->time_per_unit);
-    printf("{\"process_id\":%d,\"process_name\":\"%s\",\"material_id\":%d,\"material_name\":\"%s\",\"quantity\":%d,\"estimated_cost\":%.2f,\"estimated_time_hours\":%.2f}\n",
-           process_id, p->name, material_id, m->name, quantity, estimated_cost, estimated_time_hours);
+    printf("{\"process_id\":%d,\"process_name\":\"%s\",\"material_id\":%d,\"material_name\":\"%s\",\"quantity\":%d,\"surface_finish\":\"%s\",\"estimated_cost\":%.2f,\"estimated_time_hours\":%.2f,\"cost_breakdown\":{\"setup_cost\":%.2f,\"material_cost\":%.2f,\"machining_cost\":%.2f,\"surface_finish_cost\":%.2f,\"estimated_total\":%.2f}}\n",
+           process_id, p->name, material_id, m->name, quantity, finish, estimated_cost, estimated_time_hours,
+           setup_cost, material_cost, machining_cost, surface_finish_cost, estimated_cost);
     return 0;
 }

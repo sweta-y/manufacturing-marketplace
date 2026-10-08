@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from flask import Flask, redirect, url_for, session
+from flask import Flask, redirect, url_for, request, session
 from app.config import Config
 from app.extensions import db, bcrypt
 from app.models.user import User
@@ -30,6 +30,14 @@ def create_app():
 
     @app.errorhandler(500)
     def internal_error(error):
+        original = getattr(error, "original_exception", None) or error
+        app.logger.error(
+            "Unhandled request error (%s %s): %s",
+            request.method,
+            request.path,
+            original,
+            exc_info=(type(original), original, original.__traceback__),
+        )
         db.session.rollback()
         return server_error_page(session_role=session.get("role")), 500
 

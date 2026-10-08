@@ -205,6 +205,13 @@ def _customer_active_production_orders(cp_id):
 @role_required("customer")
 def upload_design():
     if request.method == "GET":
+        existing_request_id = request.args.get("request_id", type=int)
+        if existing_request_id:
+            req = _owned_request(existing_request_id, get_customer_profile_id())
+            if not req:
+                flash("Request not found.", "error")
+                return redirect(url_for("customer.upload_design"))
+            return upload_step1_page(step=1, existing_request=req)
         return upload_step1_page(step=1)
 
     cp_id = get_customer_profile_id()
@@ -261,63 +268,99 @@ def upload_configure(request_id):
         return redirect(url_for("customer.upload_design"))
 
     processes, materials = _load_lookups()
-
     if request.method == "GET":
-        selected_process = request.args.get("process_id") or (processes[0]["process_id"] if processes else None)
-        filtered_materials = _materials_for_process(materials, selected_process)
-        selected_material = filtered_materials[0]["material_id"] if filtered_materials else ""
+        process_id = req.get("process_id") or (processes[0]["process_id"] if processes else None)
         quantity = req.get("quantity") or 1
-        
-        # Get cost estimate if process and material are selected
-        cost_estimate = None
-        if selected_process and selected_material:
-            try:
-                cost_estimate = estimate_cost(selected_process, selected_material, quantity)
-            except Exception:
-                cost_estimate = {"error": "Could not calculate cost", "fallback": True}
-        
-        return upload_configure_page(
-            req=req,
-            processes=processes,
-            materials=filtered_materials,
-            all_materials=materials,
-            selected_process=selected_process,
-            cost_estimate=cost_estimate,
-            form={
-                "process_id": selected_process,
-                "material_id": selected_material,
-                "quantity": quantity,
-                "surface_finish": req.get("surface_finish") or "Standard",
-                "notes": req.get("notes") or "",
-            },
-            step=2,
-        )
+        surface_finish = req.get("surface_finish") or "Standard"
+        notes = req.get("notes") or ""
+        allowed_materials = _materials_for_process(materials, process_id)
+        material_id = req.get("material_id")
+        if not any(str(m["material_id"]) == str(material_id) for m in allowed_materials):
+            material_id = allowed_materials[0]["material_id"] if allowed_materials else ""
+        action = "render"
+    else:
+        process_id = request.form.get("process_id")
+        material_id = request.form.get("material_id")
+        quantity = request.form.get("quantity")
+        surface_finish = request.form.get("surface_finish", "Standard")
+        notes = request.form.get("notes", "")
+        action = request.form.get("action", "submit")
+        allowed_materials = _materials_for_process(materials, process_id)
+        if not any(str(m["material_id"]) == str(material_id) for m in allowed_materials):
+            material_id = allowed_materials[0]["material_id"] if allowed_materials else ""
 
-    process_id = request.form.get("process_id")
-    material_id = request.form.get("material_id")
-    quantity = request.form.get("quantity")
-    surface_finish = request.form.get("surface_finish", "Standard")
-    notes = request.form.get("notes", "")
-
-    if request.form.get("action") == "refresh_materials":
-        return redirect(
-            url_for("customer.upload_configure", request_id=request_id, process_id=process_id)
-        )
-
-    if request.form.get("action") == "recalculate_estimate":
-        return redirect(
-            url_for("customer.upload_configure", request_id=request_id, process_id=process_id)
-        )
-
+    form = {"process_id": process_id, "material_id": material_id, "quantity": quantity,
+            "surface_finish": surface_finish, "notes": notes}
+    if request.method == "POST":
+        locked_request = db.session.execute(
+            db.text("SELECT request_id FROM manufacturing_requests WHERE request_id=:rid AND customer_profile_id=:cp FOR UPDATE"),
+            {"rid": request_id, "cp": cp_id},
+        ).first()
+        if not locked_request:
+            flash("Request not found.", "error")
+            return redirect(url_for("customer.upload_design"))
     existing_order = db.session.execute(
         db.text("SELECT 1 FROM orders WHERE request_id=:rid LIMIT 1"),
         {"rid": request_id},
     ).first()
-    if existing_order:
+    if existing_order and request.method == "POST" and action != "refresh_materials":
         flash("This request already has an order and can no longer be changed.", "error")
         return redirect(url_for("customer.orders"))
 
-    estimate = estimate_cost(process_id, material_id, quantity)
+    try:
+        quantity = int(quantity)
+    except (TypeError, ValueError):
+        quantity = 0
+    if not process_id or not material_id or not 1 <= quantity <= 999 or surface_finish not in ("Standard", "Fine", "Ultra Fine"):
+        flash("Choose a valid process, material, quantity, and surface finish.", "error")
+        return upload_configure_page(req=req, processes=processes, materials=allowed_materials,
+                                     all_materials=materials, selected_process=process_id,
+                                     cost_estimate=None, form=form, step=2)
+
+    estimate = estimate_cost(process_id, material_id, quantity, surface_finish)
+    if request.method == "GET":
+        return upload_configure_page(req=req, processes=processes, materials=allowed_materials,
+                                     all_materials=materials, selected_process=process_id,
+                                     cost_estimate=estimate, form=form, step=2)
+    if action == "refresh_materials":
+        if not estimate.get("error") and not existing_order:
+            db.session.execute(
+                db.text("""UPDATE manufacturing_requests SET process_id=:pid, material_id=:mid,
+                         quantity=:qty, surface_finish=:sf, notes=:notes, estimated_cost=:price
+                         WHERE request_id=:rid AND NOT EXISTS
+                         (SELECT 1 FROM orders WHERE request_id=:rid)"""),
+                {"pid": process_id, "mid": material_id, "qty": quantity, "sf": surface_finish,
+                 "notes": notes, "price": str(estimate["estimated_cost"]), "rid": request_id},
+            )
+            db.session.commit()
+            req = _owned_request(request_id, cp_id)
+        return upload_configure_page(req=req, processes=processes, materials=allowed_materials,
+                                     all_materials=materials, selected_process=process_id,
+                                     cost_estimate=estimate, form=form, step=2)
+    if action == "recalculate_estimate":
+        if estimate.get("error"):
+            flash(estimate["error"], "error")
+        else:
+            db.session.execute(
+                db.text("""UPDATE manufacturing_requests SET process_id=:pid, material_id=:mid,
+                         quantity=:qty, surface_finish=:sf, notes=:notes, estimated_cost=:price
+                         WHERE request_id=:rid AND NOT EXISTS
+                         (SELECT 1 FROM orders WHERE request_id=:rid)"""),
+                {"pid": process_id, "mid": material_id, "qty": quantity, "sf": surface_finish,
+                 "notes": notes, "price": str(estimate["estimated_cost"]), "rid": request_id},
+            )
+            db.session.commit()
+            req = _owned_request(request_id, cp_id)
+        return upload_configure_page(req=req, processes=processes, materials=allowed_materials,
+                                     all_materials=materials, selected_process=process_id,
+                                     cost_estimate=estimate, form=form, step=2)
+
+    if estimate.get("error"):
+        flash("Could not calculate this configuration. Check the selected process and material.", "error")
+        return upload_configure_page(req=req, processes=processes, materials=allowed_materials,
+                                     all_materials=materials, selected_process=process_id,
+                                     cost_estimate=estimate, form=form, step=2)
+
     customer_price = (
         estimate.get("estimated_cost")
         if isinstance(estimate, dict) and not estimate.get("error")
@@ -365,16 +408,30 @@ def upload_matches(request_id):
         flash("Request not found.", "error")
         return redirect(url_for("customer.upload_design"))
 
+    if request.method == "POST":
+        db.session.execute(
+            db.text("SELECT request_id FROM manufacturing_requests WHERE request_id=:rid AND customer_profile_id=:cp FOR UPDATE"),
+            {"rid": request_id, "cp": cp_id},
+        ).first()
+
     matches, used_fallback = find_matching_manufacturers_via_hash(
         row["process_id"], row["material_id"], row["quantity"]
     )
+    existing_order = db.session.execute(
+        db.text("SELECT order_id FROM orders WHERE request_id=:rid ORDER BY order_id LIMIT 1"),
+        {"rid": request_id},
+    ).first()
 
     if request.method == "GET":
         return upload_matches_page(
             request_id=request_id,
             matches=matches,
+            existing_order_id=existing_order[0] if existing_order else None,
             step=3,
         )
+
+    if existing_order:
+        return redirect(url_for("customer.upload_confirm", request_id=request_id, order_id=existing_order[0]))
 
     manufacturer_profile_id = request.form.get("manufacturer_profile_id")
     machine_id = request.form.get("machine_id")
@@ -428,7 +485,7 @@ def upload_confirm(request_id):
 
     order = db.session.execute(
         db.text(
-            """SELECT o.order_id, mp.business_name
+            """SELECT o.order_id, o.request_id, mp.business_name
                FROM orders o
                JOIN manufacturing_requests r ON r.request_id = o.request_id
                JOIN manufacturer_profiles mp ON mp.manufacturer_profile_id = o.manufacturer_profile_id

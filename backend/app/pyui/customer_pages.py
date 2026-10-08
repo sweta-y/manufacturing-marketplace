@@ -200,6 +200,27 @@ def dashboard_page(order_count=0, active_order_count=0, draft_design_count=0,
 
 def upload_step1_page(current_user=None, step=1, **kwargs):
     upload_action = url_for("customer.upload_design")
+    existing_request = kwargs.get("existing_request")
+    if existing_request:
+        request_id = existing_request.get("request_id")
+        configure_url = url_for("customer.upload_configure", request_id=request_id)
+        filename = e(existing_request.get("filename") or "Uploaded design")
+        content = f"""<div class="main-content__header">
+  <h1 class="main-content__title">Upload Your Design</h1>
+  <p class="main-content__subtitle">Step 1 — your uploaded design is saved.</p>
+</div>
+<div class="card" style="margin-bottom:var(--space-6);"><div class="card__body"><div class="step-indicator" role="list" aria-label="Order progress">
+  <div class="step step--active" role="listitem"><div class="step__pill">1</div><span class="step__label">Upload</span></div>
+  <div class="step" role="listitem"><div class="step__pill">2</div><span class="step__label">Configure</span></div>
+  <div class="step" role="listitem"><div class="step__pill">3</div><span class="step__label">Matches</span></div>
+  <div class="step" role="listitem"><div class="step__pill">4</div><span class="step__label">Confirm</span></div>
+</div></div></div>
+<div class="card"><div class="card__body">
+  <p>Your file <strong>{filename}</strong> is attached to this request.</p>
+  <a class="btn btn-primary" href="{configure_url}" style="margin-top:var(--space-4);">Continue to Configure</a>
+</div></div>"""
+        return portal_page(portal="customer", page_title="Upload Design", active_nav="upload",
+                           content=content, current_user=current_user, title="Upload Design | 3D Marketplace")
     content = f"""<div class="main-content__header">
   <h1 class="main-content__title">Upload Your Design</h1>
   <p class="main-content__subtitle">Step 1 — upload a 3D file to begin.</p>
@@ -284,17 +305,40 @@ def upload_configure_page(request=None, req=None, processes=None, materials=None
                 subtitle_html = f"""              <p class="text-muted text-xs" style="margin-top:var(--space-2);">
                 {e(p_name)} • {e(m_name)}
               </p>"""
+            money = format_cost
+            breakdown = cost_estimate.get("cost_breakdown", {}) if isinstance(cost_estimate, dict) else {}
+            breakdown_html = ""
+            if breakdown:
+                rows = [
+                    ("Setup Cost", breakdown.get("setup_cost")),
+                    ("Material Cost", breakdown.get("material_cost")),
+                    ("Machining / Production", breakdown.get("machining_cost")),
+                    ("Surface Finish", breakdown.get("surface_finish_cost")),
+                ]
+                rows_html = "".join(f'<div style="display:flex;justify-content:space-between;gap:var(--space-3);"><span>{label}</span><span>{money(value)}</span></div>' for label, value in rows)
+                breakdown_html = f"""<div style="border-top:1px solid var(--color-border);margin-top:var(--space-4);padding-top:var(--space-3);">
+                  <p class="text-xs" style="font-weight:600;margin-bottom:var(--space-2);">COST BREAKDOWN</p>
+                  <div style="display:flex;flex-direction:column;gap:var(--space-2);">{rows_html}
+                    <div style="display:flex;justify-content:space-between;gap:var(--space-3);border-top:1px solid var(--color-border);padding-top:var(--space-2);font-weight:600;"><span>Estimated Total</span><span>{money(breakdown.get("estimated_total", est_cost))}</span></div>
+                  </div>
+                  <details style="margin-top:var(--space-3);"><summary class="text-muted text-xs" style="cursor:pointer;">How is this cost calculated?</summary><p class="text-muted text-xs" style="margin-top:var(--space-2);">Setup + Material + Machining/Production + Surface Finish = Estimated Cost. Setup is charged once; piece-based costs scale with quantity.</p></details>
+                </div>"""
+            qty = int(cost_estimate.get("quantity", 1)) if isinstance(cost_estimate, dict) else 1
+            finish = cost_estimate.get("surface_finish", "Standard") if isinstance(cost_estimate, dict) else "Standard"
+            context = f"{qty} {'piece' if qty == 1 else 'pieces'} • {e(p_name or '')} • {e(m_name or '')} • {est_time:.1f} hours • {e(finish)} finish"
             inner_cost = f"""              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
                 <div>
                   <p class="text-muted text-xs">Estimated Cost</p>
-                  <p class="text-lg" style="font-weight:600;">${est_cost:.2f}</p>
+                  <p class="text-lg" style="font-weight:600;">{money(est_cost)}</p>
                 </div>
                 <div>
                   <p class="text-muted text-xs">Estimated Time</p>
                   <p class="text-lg" style="font-weight:600;">{est_time:.1f} hours</p>
                 </div>
               </div>
-{subtitle_html}"""
+{subtitle_html}
+              <p class="text-muted text-xs" style="margin-top:var(--space-3);">{context}</p>
+{breakdown_html}"""
 
         cost_estimate_html = f"""      <div class="card" style="background-color:var(--color-light-bg);border-left:4px solid var(--color-accent);">
         <div class="card__body">
@@ -315,6 +359,7 @@ def upload_configure_page(request=None, req=None, processes=None, materials=None
     finishes_html = "\n".join(finish_radios)
 
     form_action = url_for("customer.upload_configure", request_id=req_id)
+    upload_back_url = url_for("customer.upload_design", request_id=req_id)
     qty_val = e(form.get("quantity", 1))
     notes_val = e(form.get("notes", ""))
 
@@ -337,6 +382,7 @@ def upload_configure_page(request=None, req=None, processes=None, materials=None
 <div class="card">
   <div class="card__header"><span class="card__title">Step 2 — Configure Your Order</span></div>
   <div class="card__body">
+    <a class="btn btn-secondary btn-sm" href="{upload_back_url}" style="margin-bottom:var(--space-4);">← Back to Upload</a>
     <p class="text-muted text-sm" style="margin-bottom:var(--space-4);">Uploaded file: <strong>{e(req_filename)}</strong></p>
 
     <form method="POST" action="{form_action}" style="display:flex;flex-direction:column;gap:var(--space-5);">
@@ -380,6 +426,13 @@ def upload_configure_page(request=None, req=None, processes=None, materials=None
 
       <button class="btn btn-primary" type="submit">Find Manufacturers</button>
     </form>
+    <script>
+      document.querySelectorAll('#process_id, #material_id').forEach(function(select) {{
+        select.addEventListener('change', function() {{
+          this.form.requestSubmit(this.form.querySelector('[value="refresh_materials"]'));
+        }});
+      }});
+    </script>
   </div>
 </div>"""
 
@@ -393,11 +446,12 @@ def upload_configure_page(request=None, req=None, processes=None, materials=None
     )
 
 
-def upload_matches_page(request_id, matches, current_user=None, step=3, **kwargs):
+def upload_matches_page(request_id, matches, current_user=None, step=3, existing_order_id=None, **kwargs):
     if not matches:
-        back_url = url_for("customer.upload_configure", request_id=request_id)
-        matches_html = f"""    <p class="text-muted text-sm">No manufacturers currently match this configuration. Try a different process or material.</p>
-    <a class="btn btn-secondary" href="{back_url}">Back to Configure</a>"""
+        if existing_order_id:
+            matches_html = '<p class="text-muted text-sm">An order has already been placed for this request.</p>'
+        else:
+            matches_html = '<p class="text-muted text-sm">No manufacturers currently match this configuration. Try a different process or material.</p>'
     else:
         cards = []
         action_url = url_for("customer.upload_matches", request_id=request_id)
@@ -407,6 +461,15 @@ def upload_matches_page(request_id, matches, current_user=None, step=3, **kwargs
             max_dims = e(m.get("max_dimensions") if hasattr(m, "get") else getattr(m, "max_dimensions", "—") or "—")
             mp_id = e(m.get("manufacturer_profile_id") if hasattr(m, "get") else getattr(m, "manufacturer_profile_id", ""))
             mach_id = e(m.get("machine_id") if hasattr(m, "get") else getattr(m, "machine_id", ""))
+            order_action = (
+                '<span class="text-muted text-sm">Order already placed</span>'
+                if existing_order_id else
+                f'''<form method="POST" action="{action_url}">
+            <input type="hidden" name="manufacturer_profile_id" value="{mp_id}" />
+            <input type="hidden" name="machine_id" value="{mach_id}" />
+            <button class="btn btn-primary btn-sm" type="submit">Select &amp; Place Order</button>
+          </form>'''
+            )
             cards.append(
                 f"""      <div class="card">
         <div class="card__body" style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);flex-wrap:wrap;">
@@ -414,11 +477,7 @@ def upload_matches_page(request_id, matches, current_user=None, step=3, **kwargs
             <strong>{b_name}</strong>
             <p class="text-muted text-sm">{m_name} — max {max_dims}</p>
           </div>
-          <form method="POST" action="{action_url}">
-            <input type="hidden" name="manufacturer_profile_id" value="{mp_id}" />
-            <input type="hidden" name="machine_id" value="{mach_id}" />
-            <button class="btn btn-primary btn-sm" type="submit">Select &amp; Place Order</button>
-          </form>
+          {order_action}
         </div>
       </div>"""
             )
@@ -443,6 +502,7 @@ def upload_matches_page(request_id, matches, current_user=None, step=3, **kwargs
 <div class="card">
   <div class="card__header"><span class="card__title">Step 3 — Choose a Manufacturer</span></div>
   <div class="card__body" style="display:flex;flex-direction:column;gap:var(--space-3);">
+    <a class="btn btn-secondary btn-sm" href="{url_for('customer.upload_configure', request_id=request_id)}" style="align-self:flex-start;margin-bottom:var(--space-2);">← Back to Configure</a>
 {matches_html}
   </div>
 </div>"""
@@ -461,6 +521,7 @@ def upload_confirm_page(order, current_user=None, step=4, **kwargs):
     order_id = e(order.get("order_id") if hasattr(order, "get") else getattr(order, "order_id", ""))
     business_name = e(order.get("business_name") if hasattr(order, "get") else getattr(order, "business_name", ""))
     orders_url = url_for("customer.orders")
+    matches_url = url_for("customer.upload_matches", request_id=order.get("request_id"))
 
     content = f"""<div class="main-content__header">
   <h1 class="main-content__title">Order Placed</h1>
@@ -482,6 +543,7 @@ def upload_confirm_page(order, current_user=None, step=4, **kwargs):
   <div class="card__header"><span class="card__title">Order Placed Successfully</span></div>
   <div class="card__body">
     <p>Order #{order_id} placed successfully with <strong>{business_name}</strong>.</p>
+    <a class="btn btn-secondary" href="{matches_url}" style="margin-top:var(--space-4);">← Back to Matches</a>
     <a class="btn btn-primary" href="{orders_url}" style="margin-top:var(--space-4);">View My Orders</a>
   </div>
 </div>"""
