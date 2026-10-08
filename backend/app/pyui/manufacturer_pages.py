@@ -594,11 +594,91 @@ def advance_order_page(order_id, current_status, next_status, customer_price=Non
     final_cost_html = ""
     if next_status == "Completed":
         if maximum_price is not None:
-            limit_text = f"Maximum allowed quote: {format_cost(maximum_price)} (75% of customer price {format_cost(customer_price)})."
+            max_value = e(format(maximum_price, ".2f"))
+            customer_value = e(format(customer_price, ".2f"))
+            max_display = format_cost(maximum_price)
+            customer_display = format_cost(customer_price)
             final_cost_html = f"""        <div class="form-group">
-          <label class="form-label" for="final_cost">Manufacturer Quote (&#8377;)</label>
-          <input class="form-input" type="number" id="final_cost" name="final_cost" placeholder="e.g. 4500" min="0" max="{maximum_price:.2f}" step="0.01" aria-describedby="manufacturer-price-limit" required />
-          <p class="form-hint" id="manufacturer-price-limit">{e(limit_text)}</p>
+          <section aria-label="Manufacturer quotation" style="border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-5);background-color:var(--color-surface);">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-4);margin-bottom:var(--space-5);">
+              <div>
+                <p class="text-muted text-xs" style="margin-bottom:var(--space-1);">Customer Price</p>
+                <p style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);">{customer_display}</p>
+              </div>
+              <div>
+                <p class="text-muted text-xs" style="margin-bottom:var(--space-1);">Maximum allowed</p>
+                <p style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);">{max_display}</p>
+                <p class="form-hint">75% of customer price</p>
+              </div>
+            </div>
+            <p class="text-muted text-sm" style="margin-bottom:var(--space-4);">Choose your own quote up to the maximum allowed amount.</p>
+            <label class="form-label" for="final_cost">Manufacturer Quote</label>
+            <input class="form-input" type="number" id="final_cost" name="final_cost" placeholder="Enter your quote" min="0" max="{max_value}" step="0.01" inputmode="decimal" data-customer-price="{customer_value}" aria-describedby="manufacturer-price-limit manufacturer-quote-error" required />
+            <p class="form-hint" id="manufacturer-price-limit" style="margin-top:var(--space-2);">Maximum allowed: {max_display} · 75% of customer price</p>
+            <label class="form-label" for="final_cost_slider" style="display:block;margin-top:var(--space-4);">Adjust quote</label>
+            <input type="range" id="final_cost_slider" min="0" max="{max_value}" step="0.01" value="0" aria-label="Adjust manufacturer quote" aria-valuetext="₹0.00" style="width:100%;accent-color:var(--color-primary);"{ ' disabled' if float(maximum_price) <= 0 else '' } />
+            <div style="display:flex;justify-content:space-between;gap:var(--space-3);font-size:var(--font-size-xs);color:var(--color-text-secondary);">
+              <span>{format_cost(0)}</span><span>Maximum: {max_display}</span>
+            </div>
+            <p class="form-error" id="manufacturer-quote-error" role="alert" hidden></p>
+            <div aria-label="Quote summary" aria-live="polite" style="border-top:1px solid var(--color-border-light);margin-top:var(--space-5);padding-top:var(--space-4);display:flex;flex-direction:column;gap:var(--space-2);">
+              <div style="display:flex;justify-content:space-between;gap:var(--space-3);"><span>Customer Price</span><span>{customer_display}</span></div>
+              <div style="display:flex;justify-content:space-between;gap:var(--space-3);"><span>Manufacturer Quote</span><span id="manufacturer-quote-summary">—</span></div>
+              <div style="display:flex;justify-content:space-between;gap:var(--space-3);border-radius:var(--radius-lg);background-color:var(--color-primary-subtle);padding:var(--space-3);font-weight:var(--font-weight-semibold);"><span>Admin Profit</span><span id="manufacturer-profit-summary">—</span></div>
+            </div>
+          </section>
+          <script>
+            (function() {{
+              const form = document.getElementById("manufacturer-order-update-form");
+              const quote = document.getElementById("final_cost");
+              const slider = document.getElementById("final_cost_slider");
+              const error = document.getElementById("manufacturer-quote-error");
+              const quoteSummary = document.getElementById("manufacturer-quote-summary");
+              const profitSummary = document.getElementById("manufacturer-profit-summary");
+              const maximum = Number(quote.max);
+              const customerPrice = Number(quote.dataset.customerPrice);
+              const formatMoney = new Intl.NumberFormat("en-IN", {{
+                style: "currency", currency: "INR", minimumFractionDigits: 2, maximumFractionDigits: 2
+              }});
+
+              function validateQuote(showError) {{
+                const raw = quote.value.trim();
+                const amount = Number(raw);
+                let message = "";
+                if (!raw) message = "Enter a manufacturer quote.";
+                else if (!Number.isFinite(amount)) message = "Enter a valid quote amount.";
+                else if (amount < 0) message = "The quote cannot be negative.";
+                else if (Math.abs(amount * 100 - Math.round(amount * 100)) > 1e-7) message = "Enter an amount with no more than two decimal places.";
+                else if (amount > maximum) message = "The quote cannot exceed " + formatMoney.format(maximum) + ".";
+
+                quote.setCustomValidity(message);
+                error.textContent = message;
+                error.hidden = !message || !showError;
+
+                const sliderAmount = Number.isFinite(amount) ? Math.min(Math.max(amount, 0), maximum) : 0;
+                slider.value = sliderAmount.toFixed(2);
+                slider.setAttribute("aria-valuetext", formatMoney.format(sliderAmount));
+                quoteSummary.textContent = raw && Number.isFinite(amount) ? formatMoney.format(amount) : "—";
+                profitSummary.textContent = !message && raw ? formatMoney.format(customerPrice - amount) : "—";
+                return !message;
+              }}
+
+              quote.addEventListener("input", function() {{ validateQuote(true); }});
+              quote.addEventListener("invalid", function() {{ validateQuote(true); }});
+              slider.addEventListener("input", function() {{
+                quote.value = Number(slider.value).toFixed(2);
+                validateQuote(true);
+              }});
+              form.addEventListener("submit", function(event) {{
+                if (!validateQuote(true)) {{
+                  event.preventDefault();
+                  quote.reportValidity();
+                  quote.focus();
+                }}
+              }});
+              validateQuote(false);
+            }})();
+          </script>
         </div>"""
         else:
             final_cost_html = """        <p class="form-hint">A customer price is unavailable, so a manufacturer quote cannot be submitted.</p>"""
@@ -612,7 +692,7 @@ def advance_order_page(order_id, current_status, next_status, customer_price=Non
 </div>
 
 <div class="card" style="max-width:600px;">
-  <form method="POST" action="{form_action}">
+  <form method="POST" id="manufacturer-order-update-form" action="{form_action}">
     <div class="card__body">
 {final_cost_html}
 
