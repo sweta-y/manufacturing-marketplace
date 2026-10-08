@@ -455,12 +455,20 @@ def upload_matches_page(request_id, matches, current_user=None, step=3, existing
     else:
         cards = []
         action_url = url_for("customer.upload_matches", request_id=request_id)
-        for m in matches:
+        demo_ratings = ((4.8, 124), (4.6, 89), (4.3, 56))
+        for match_index, m in enumerate(matches):
             b_name = e(m.get("business_name") if hasattr(m, "get") else getattr(m, "business_name", ""))
             m_name = e(m.get("machine_name") if hasattr(m, "get") else getattr(m, "machine_name", ""))
             max_dims = e(m.get("max_dimensions") if hasattr(m, "get") else getattr(m, "max_dimensions", "—") or "—")
             mp_id = e(m.get("manufacturer_profile_id") if hasattr(m, "get") else getattr(m, "manufacturer_profile_id", ""))
             mach_id = e(m.get("machine_id") if hasattr(m, "get") else getattr(m, "machine_id", ""))
+            rating, review_count = demo_ratings[match_index % len(demo_ratings)]
+            filled_stars = int(rating + 0.5)
+            stars_html = "".join(
+                '<span aria-hidden="true">&#9733;</span>' if star_index < filled_stars
+                else '<span aria-hidden="true">&#9734;</span>'
+                for star_index in range(5)
+            )
             order_action = (
                 '<span class="text-muted text-sm">Order already placed</span>'
                 if existing_order_id else
@@ -475,6 +483,12 @@ def upload_matches_page(request_id, matches, current_user=None, step=3, existing
         <div class="card__body" style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);flex-wrap:wrap;">
           <div>
             <strong>{b_name}</strong>
+            <div aria-label="Rated {rating} out of 5, based on {review_count} demo reviews" style="display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-2);flex-wrap:wrap;">
+              <span style="color:var(--color-warning,#b7791f);font-size:var(--font-size-lg);letter-spacing:1px;line-height:1;">{stars_html}</span>
+              <strong style="font-size:var(--font-size-sm);">{rating:.1f}/5</strong>
+              <span class="text-muted text-sm">({review_count} reviews)</span>
+              <span class="text-muted" style="font-size:var(--font-size-xs);border:1px solid var(--color-border);border-radius:var(--radius-full);padding:2px var(--space-2);">Demo</span>
+            </div>
             <p class="text-muted text-sm">{m_name} — max {max_dims}</p>
           </div>
           {order_action}
